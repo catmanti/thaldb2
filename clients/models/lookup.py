@@ -32,6 +32,7 @@ class Choice(models.Model):
         """
         Helper to get choices for a specific category.
         Returns list of (value, label) tuples.
+        use this in admin choice fields for filtering. eg. Choice.get_choices("admission_reason")
         """
         try:
             return [(choice.id, choice.name) for choice in cls.objects.filter(category=category).order_by("name")]
@@ -39,7 +40,7 @@ class Choice(models.Model):
             return []
 
     class Meta:
-        unique_together = [["category", "name"]]
+        unique_together = [["category", "name"]] # prevent adding same name to same category
 
 class Province(models.Model):
     """

@@ -1,0 +1,6 @@
+File: 
+management.py:L128
+Transfusion.admission is currently a required ForeignKey. In thalassemia daycare centers, routine 2-hour blood transfusions often happen without a full hospital admission.
+Recommendation: Make admission optional (null=True, blank=True) and add a direct client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="transfusions") field so daycare transfusions can be recorded directly.
+
+    

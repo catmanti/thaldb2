@@ -1,0 +1,114 @@
+Choices-data
+admission_reason
+    Blood Transfusion
+    IV Iron Therapy
+    Complications Management
+    Other
+clinic_type
+    Thalassaemia
+    Endocrinology
+    Hematology
+    Nephrology
+    Cardiology
+    Gastroenterology
+    Hepatology
+    Oncology
+    Respiratory
+    Neurology
+    Orthopedics
+    Surgery
+    Urology
+    ENT
+    Ophthalmology
+    Dermatology
+    Psychiatry
+    Gynecology
+    Obstetrics
+    Ophthalmology
+    Dermatology
+    Psychiatry
+    Gynecology
+    Obstetrics
+    Ophthalmology
+    Dermatology
+    Psychiatry
+    Gynecology
+    Obstetrics
+    Other
+marital_status
+    Married
+    Single
+    Divorced
+    Widowed
+    Separated
+current_status
+    Active
+    Inactive
+    Comatose
+    Dead
+    Transferred
+complication_status
+    Active
+    Inactive
+    Resolved
+vaccine_name
+    Hepatitis B
+    Hepatitis C
+    Influenza
+    Pneumococcal
+    Other
+special_blood_type
+    Selected
+    Erradicated
+    LRB
+growth
+    Height
+    Weigh
+    Head Circumference
+
+
+Complication_Types
+    Diabetes Mellitus
+    Hypertension
+    Hyperthyroidism
+    Renal Failure
+    Cardiac Failure
+    Pulmonary Hypertension
+    Osteoporosis
+    Cholelithiasis
+    Splenomegaly
+    Hepatomegaly
+    Hepatitis
+    Hypoparathyroidism
+    Growth Retardation
+    Psychological / Mental Health Issues
+    Infections
+    Other
+
+Drug Names
+    Deferasirox
+    Deferoxamine
+    Vitamin C
+    Vitamin D
+    Calcium Carbonate
+    Vitamin B
+    Folic Acid
+
+Investigation Types
+    Hb
+    WBC
+    Platelet Count
+    TSH
+    FT4
+    Fasting Glucose
+    Post-Prandial Glucose
+    HbA1c
+    Creatinine
+    Bilirubin Total
+    Bilirubin Direct
+    Bilirubin Indirect
+    ALT
+    AST
+
+
+    
