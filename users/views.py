@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView as DjangoLoginView, LogoutView as DjangoLogoutView
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
+
+from clients.models import Admission, Client, ClinicVisit, ThalassemiaUnit, Transfusion
 
 
 class CustomLoginView(DjangoLoginView):
@@ -16,8 +18,24 @@ class CustomLogoutView(DjangoLogoutView):
 
 @login_required
 def dashboard_view(request):
-    """Main dashboard view."""
-    return render(request, "dashboard.html")
+    """Main role-customized dashboard view."""
+    total_clients = Client.objects.count()
+    total_admissions = Admission.objects.count()
+    total_transfusions = Transfusion.objects.count()
+    total_units = ThalassemiaUnit.objects.count()
+
+    recent_clients = Client.objects.select_related("diagnosis").order_by("-id")[:5]
+    recent_visits = ClinicVisit.objects.select_related("client", "clinic_type").order_by("-date_visit")[:5]
+
+    context = {
+        "total_clients": total_clients,
+        "total_admissions": total_admissions,
+        "total_transfusions": total_transfusions,
+        "total_units": total_units,
+        "recent_clients": recent_clients,
+        "recent_visits": recent_visits,
+    }
+    return render(request, "dashboard.html", context)
 
 
 @login_required

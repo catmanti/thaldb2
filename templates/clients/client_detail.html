@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.full_name }} ({{ client.registration_number }}) - ThalDB EMR{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Action Bar -->
+    <div class="flex items-center justify-between gap-4 border-b border-base-300 pb-4">
+        <a href="{% url 'clients:client-list' %}" class="btn btn-ghost btn-sm gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Directory
+        </a>
+        <div class="flex gap-2">
+            <a href="{% url 'clients:client-update' client.pk %}" class="btn btn-primary btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Header Banner -->
+    <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
+        <div class="card-body p-6 sm:p-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                <!-- Avatar / Photo -->
+                <div class="avatar placeholder shrink-0">
+                    <div class="bg-primary/10 text-primary rounded-2xl w-24 h-24 ring ring-primary ring-offset-base-100 ring-offset-2 flex items-center justify-center font-extrabold text-3xl">
+                        {% if client.photo %}
+                        <img src="{{ client.photo.url }}" alt="{{ client.full_name }}" class="object-cover" />
+                        {% else %}
+                        {{ client.full_name|slice:":1" }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Main Info -->
+                <div class="flex-grow space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="badge badge-primary font-mono font-bold text-sm px-3 py-1">{{ client.registration_number }}</span>
+                        {% if client.diagnosis %}
+                        <span class="badge badge-info badge-outline font-semibold text-xs">{{ client.diagnosis.name }}</span>
+                        {% endif %}
+                        {% if client.primary_care_unit %}
+                        <span class="badge badge-secondary text-xs">Unit: {{ client.primary_care_unit.name }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="text-3xl font-extrabold text-base-content tracking-tight leading-tight">
+                        {{ client.full_name }}
+                        {% if client.common_name %}<span class="text-xl font-normal text-base-content/60">({{ client.common_name }})</span>{% endif %}
+                    </h1>
+
+                    <!-- Key Metadata Pills -->
+                    <div class="flex flex-wrap items-center gap-4 text-xs font-semibold text-base-content/80 pt-1">
+                        <span>🎂 <strong>Age:</strong> {{ client.age_string }}</span>
+                        <span>🩸 <strong>Blood:</strong> <span class="text-red-500 font-bold">{{ client.blood_group|default:"Unknown" }}</span></span>
+                        <span>👤 <strong>Gender:</strong> {{ client.get_gender_display }}</span>
+                        <span>🪪 <strong>NIC:</strong> {{ client.nic_number|default:"N/A" }}</span>
+                        <span>📞 <strong>Contact:</strong> {{ client.contact_number|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Details Grid & History Tabs -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar Info Card -->
+        <div class="space-y-4">
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5 space-y-3 text-sm">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2">Location & Guardian Info</h3>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">DS Division / District</span>
+                        <p class="font-semibold">{{ client.ds_division.name|default:"N/A" }} {% if client.ds_division %}({{ client.ds_division.district.name }}){% endif %}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Address</span>
+                        <p class="font-medium">{{ client.address|default:"N/A" }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Primary Guardian</span>
+                        <p class="font-semibold">{{ client.guardian_name_1|default:"N/A" }}</p>
+                        <p class="text-xs text-base-content/70">{{ client.guardian_contact_number_1|default:"" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Summary Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5 space-y-3 text-sm">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2">Medical Baseline</h3>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Hb at Diagnosis</span>
+                        <p class="font-semibold">{{ client.HB_level_at_diagnosis|default:"N/A" }} g/dL</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Date First Transfused</span>
+                        <p class="font-medium">{{ client.date_first_transfused|default:"N/A" }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Iron Chelation Started</span>
+                        <p class="font-medium">{{ client.date_iron_chelation_started|default:"N/A" }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Transfusion Regimen</span>
+                        <p class="font-medium">{{ client.transfusion_regimen|default:"N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main History Sections (Tabs / Accordions) -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Admissions & Transfusions Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5">
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>🩸 Hospital Admissions & Transfusions</span>
+                        <span class="badge badge-primary badge-sm">{{ admissions|length }}</span>
+                    </h3>
+
+                    {% if admissions %}
+                    <div class="space-y-4 mt-3">
+                        {% for adm in admissions %}
+                        <div class="p-4 rounded-xl bg-base-200/50 border border-base-300 space-y-2">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-primary">Admission: {{ adm.date_of_admission }}</span>
+                                <span class="badge badge-ghost badge-sm">Discharged: {{ adm.date_of_discharge|default:"Active / Not discharged" }}</span>
+                            </div>
+                            <p class="text-xs text-base-content/80"><strong>Reason:</strong> {{ adm.reason_for_admission.name|default:adm.reason_for_admission }}</p>
+
+                            {% if adm.blood_transfusions.all %}
+                            <div class="mt-2 pt-2 border-t border-base-300/60 space-y-1">
+                                <span class="text-xs font-bold text-error uppercase">Transfusions Given:</span>
+                                {% for tr in adm.blood_transfusions.all %}
+                                <div class="text-xs flex flex-wrap justify-between bg-base-100 p-2 rounded border border-base-200">
+                                    <span>Date: <strong>{{ tr.date_of_transfusion }}</strong></span>
+                                    <span>Pre-Hb: <strong>{{ tr.pre_HB_level|default:"--" }} g/dL</strong></span>
+                                    <span>Post-Hb: <strong>{{ tr.post_HB_level|default:"--" }} g/dL</strong></span>
+                                    <span>Amount: <strong>{{ tr.amount_of_blood|default:"--" }} mL</strong></span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/60 italic py-4 text-center">No admissions or transfusions recorded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Clinic Visits Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5">
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>🏥 Clinic Visit History</span>
+                        <span class="badge badge-primary badge-sm">{{ clinic_visits|length }}</span>
+                    </h3>
+
+                    {% if clinic_visits %}
+                    <div class="overflow-x-auto mt-2">
+                        <table class="table table-compact w-full text-xs">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Clinic Type</th>
+                                    <th>Problem / Action</th>
+                                    <th>Next Visit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visit in clinic_visits %}
+                                <tr>
+                                    <td class="font-bold">{{ visit.date_visit }}</td>
+                                    <td><span class="badge badge-ghost badge-xs">{{ visit.clinic_type.name|default:"General" }}</span></td>
+                                    <td>{{ visit.problem|default:visit.action|default:"--"|truncatewords:8 }}</td>
+                                    <td>{{ visit.next_visit_date|default:"--" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/60 italic py-4 text-center">No clinic visits recorded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Investigations Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5">
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>🧪 Lab Investigations</span>
+                        <span class="badge badge-primary badge-sm">{{ investigations|length }}</span>
+                    </h3>
+
+                    {% if investigations %}
+                    <div class="overflow-x-auto mt-2">
+                        <table class="table table-compact w-full text-xs">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Test Name</th>
+                                    <th>Value</th>
+                                    <th>Laboratory</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inv in investigations %}
+                                <tr>
+                                    <td class="font-bold">{{ inv.date_done }}</td>
+                                    <td>{{ inv.investigation_type.name }}</td>
+                                    <td class="font-mono font-bold text-primary">{{ inv.value }} {{ inv.investigation_type.unit|default:"" }}</td>
+                                    <td>{{ inv.laboratory_name|default:"--" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/60 italic py-4 text-center">No lab investigations recorded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

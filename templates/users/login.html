@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - ThalDB EMR{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center py-6">
+    <div class="card bg-base-100 shadow-2xl border border-base-300 w-full max-w-md">
+        <div class="card-body p-6 sm:p-8 space-y-6">
+            <!-- Brand & Heading -->
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-base-content">ThalDB EMR</h1>
+                <p class="text-xs text-base-content/70">Sign in with your email address to access the Thalassemia Patient Registry.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-error shadow-sm text-xs py-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Invalid email or password. Please try again.</span>
+                </div>
+                {% endif %}
+
+                <!-- Email Field -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Email Address</span></label>
+                    <div class="relative">
+                        <input type="email" name="username" required autofocus placeholder="doctor@hospital.lk" class="input input-bordered w-full pl-10" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3.5 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Password</span></label>
+                    <div class="relative">
+                        <input type="password" name="password" required placeholder="••••••••" class="input input-bordered w-full pl-10" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3.5 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" class="btn btn-primary w-full font-bold">Sign In</button>
+                </div>
+            </form>
+
+            <div class="border-t border-base-200 pt-4 text-center text-xs text-base-content/60">
+                <p>Authorized Sri Lanka Healthcare Staff Only.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

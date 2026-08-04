@@ -14,7 +14,7 @@
     
     {% block extra_head %}{% endblock %}
 </head>
-<body class="min-h-full flex flex-col bg-base-200 text-base-content font-sans antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="min-h-full flex flex-col bg-base-200 text-base-content font-sans antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-user-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
 
     <!-- Navigation Header -->
     <header class="sticky top-0 z-50 shadow-md">
@@ -154,13 +154,11 @@
                 document.documentElement.classList.remove('dark');
             }
             // Send theme preference to backend via HTMX if user is logged in
-            {% if request.user.is_authenticated %}
-            if (window.htmx) {
+            if (document.body.dataset.userAuthenticated === 'true' && window.htmx) {
                 htmx.ajax('POST', '{% url "update_preferences" %}', {
                     values: { color_scheme: themeName }
                 });
             }
-            {% endif %}
         }
     </script>
     {% block extra_js %}{% endblock %}

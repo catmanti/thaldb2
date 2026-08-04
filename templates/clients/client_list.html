@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Client Directory - ThalDB EMR{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header & Action Button -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-base-300 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-base-content">Client Directory</h1>
+            <p class="text-xs text-base-content/70 mt-1">Search, filter, and manage registered Thalassemia patients.</p>
+        </div>
+        <a href="{% url 'clients:client-create' %}" class="btn btn-primary gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Register Patient
+        </a>
+    </div>
+
+    <!-- Search & Filter Form -->
+    <div class="card bg-base-100 shadow-md border border-base-300">
+        <div class="card-body p-4">
+            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                <!-- Search Query -->
+                <div class="form-control lg:col-span-2">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Search Patient</span></label>
+                    <input type="text" name="q" value="{{ query }}" placeholder="Search by Reg No, Name, NIC, or Phone..." class="input input-bordered input-sm w-full">
+                </div>
+
+                <!-- Diagnosis Filter -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Diagnosis</span></label>
+                    <select name="diagnosis" class="select select-bordered select-sm w-full">
+                        <option value="">All Diagnoses</option>
+                        {% for d in diagnoses %}
+                        <option value="{{ d.id }}" {% if selected_diagnosis == d.id|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Gender Filter -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Gender</span></label>
+                    <select name="gender" class="select select-bordered select-sm w-full">
+                        <option value="">All Genders</option>
+                        <option value="M" {% if selected_gender == "M" %}selected{% endif %}>Male</option>
+                        <option value="F" {% if selected_gender == "F" %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+
+                <!-- Submit / Clear Buttons -->
+                <div class="flex gap-2 sm:col-span-2 lg:col-span-4 justify-end pt-2">
+                    {% if query or selected_diagnosis or selected_gender %}
+                    <a href="{% url 'clients:client-list' %}" class="btn btn-ghost btn-sm">Clear Filters</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary btn-sm px-6">Filter Results</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Client Directory Table -->
+    <div class="card bg-base-100 shadow-md border border-base-300 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full text-sm">
+                <thead class="bg-base-200 text-xs uppercase font-bold text-base-content/80">
+                    <tr>
+                        <th>Reg. No</th>
+                        <th>Patient Name</th>
+                        <th>Age / Gender</th>
+                        <th>Diagnosis</th>
+                        <th>Primary Unit</th>
+                        <th>Contact</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr class="hover">
+                        <td class="font-bold text-primary">{{ client.registration_number }}</td>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary/10 text-primary rounded-full w-9 h-9 flex items-center justify-center font-bold uppercase text-xs">
+                                        {% if client.photo %}
+                                        <img src="{{ client.photo.url }}" alt="{{ client.full_name }}" />
+                                        {% else %}
+                                        {{ client.full_name|slice:":1" }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{% url 'clients:client-detail' client.pk %}" class="font-bold hover:underline text-base-content">
+                                        {{ client.full_name }}
+                                    </a>
+                                    {% if client.common_name %}
+                                    <p class="text-xs text-base-content/60">({{ client.common_name }})</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="font-semibold">{{ client.age|default:"--" }} yrs</span>
+                            <span class="badge badge-ghost badge-xs uppercase ml-1">{{ client.gender }}</span>
+                        </td>
+                        <td>
+                            {% if client.diagnosis %}
+                            <span class="badge badge-info badge-outline font-medium text-xs">{{ client.diagnosis.name }}</span>
+                            {% else %}
+                            <span class="text-base-content/40 italic">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.primary_care_unit %}
+                            <span class="badge badge-secondary badge-xs">{{ client.primary_care_unit.name }}</span>
+                            {% else %}
+                            <span class="text-base-content/40 italic">None</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ client.contact_number|default:"--" }}</td>
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                <a href="{% url 'clients:client-detail' client.pk %}" class="btn btn-ghost btn-xs" title="View Profile">
+                                    View
+                                </a>
+                                <a href="{% url 'clients:client-update' client.pk %}" class="btn btn-ghost btn-xs text-info" title="Edit Profile">
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-base-content/60">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <p class="font-bold">No clients found</p>
+                            <p class="text-xs mt-1">Try adjusting your search query or filters.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="p-4 border-t border-base-200 flex justify-center">
+            <div class="join">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}" class="join-item btn btn-sm">«</a>
+                {% endif %}
+                <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}" class="join-item btn btn-sm">»</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

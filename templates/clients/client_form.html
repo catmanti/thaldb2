@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - ThalDB EMR{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-base-300 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-base-content">{{ page_title }}</h1>
+            <p class="text-xs text-base-content/70 mt-1">Fill in patient registration, demographic, and clinical details below.</p>
+        </div>
+        <a href="{% url 'clients:client-list' %}" class="btn btn-ghost btn-sm gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Directory
+        </a>
+    </div>
+
+    <!-- Registration Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error shadow-lg">
+            <div>
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Section 1: Core Identification & Demographics -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body p-6 space-y-4">
+                <h2 class="card-title text-base font-bold uppercase tracking-wider text-primary border-b border-base-200 pb-2">
+                    1. Patient Identification & Demographics
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Registration Number *</span></label>
+                        {{ form.registration_number }}
+                        {% if form.registration_number.errors %}<span class="text-error text-xs mt-1">{{ form.registration_number.errors.0 }}</span>{% endif %}
+                    </div>
+
+                    <div class="form-control sm:col-span-2">
+                        <label class="label"><span class="label-text font-semibold">Full Legal Name *</span></label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}<span class="text-error text-xs mt-1">{{ form.full_name.errors.0 }}</span>{% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Common Name / Nickname</span></label>
+                        {{ form.common_name }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Gender *</span></label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}<span class="text-error text-xs mt-1">{{ form.gender.errors.0 }}</span>{% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Ethnicity</span></label>
+                        {{ form.ethnicity }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Date of Birth</span></label>
+                        {{ form.date_of_birth }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Blood Group</span></label>
+                        {{ form.blood_group }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">NIC Number</span></label>
+                        {{ form.nic_number }}
+                        {% if form.nic_number.errors %}<span class="text-error text-xs mt-1">{{ form.nic_number.errors.0 }}</span>{% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Date of Registration</span></label>
+                        {{ form.date_of_registration }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Photo Upload</span></label>
+                        {{ form.photo }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Clinical Details -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body p-6 space-y-4">
+                <h2 class="card-title text-base font-bold uppercase tracking-wider text-primary border-b border-base-200 pb-2">
+                    2. Diagnosis & Medical Profile
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text font-semibold">Thalassemia Diagnosis</span></label>
+                        {{ form.diagnosis }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Diagnosis Date</span></label>
+                        {{ form.diagnosis_date }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Hb Level at Diagnosis (g/dL)</span></label>
+                        {{ form.HB_level_at_diagnosis }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Date First Transfused</span></label>
+                        {{ form.date_first_transfused }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Iron Chelation Start Date</span></label>
+                        {{ form.date_iron_chelation_started }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Transfusion Regimen</span></label>
+                        {{ form.transfusion_regimen }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Location & Social Details -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body p-6 space-y-4">
+                <h2 class="card-title text-base font-bold uppercase tracking-wider text-primary border-b border-base-200 pb-2">
+                    3. Address & Cascading Location
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Province -->
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Province</span></label>
+                        {{ form.province }}
+                    </div>
+
+                    <!-- District (Updated via HTMX) -->
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">District</span></label>
+                        {{ form.district }}
+                    </div>
+
+                    <!-- DS Division (Updated via HTMX) -->
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">DS Division</span></label>
+                        {{ form.ds_division }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                    <div class="form-control sm:col-span-2">
+                        <label class="label"><span class="label-text">Street Address</span></label>
+                        {{ form.address }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Contact Telephone</span></label>
+                        {{ form.contact_number }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Email Address</span></label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Marital Status</span></label>
+                        {{ form.marital_status }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Occupation</span></label>
+                        {{ form.occupation }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Guardians & Notes -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body p-6 space-y-4">
+                <h2 class="card-title text-base font-bold uppercase tracking-wider text-primary border-b border-base-200 pb-2">
+                    4. Guardians & Clinical Notes
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Primary Guardian Name</span></label>
+                        {{ form.guardian_name_1 }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Primary Guardian Phone</span></label>
+                        {{ form.guardian_contact_number_1 }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Secondary Guardian Name</span></label>
+                        {{ form.guardian_name_2 }}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Secondary Guardian Phone</span></label>
+                        {{ form.guardian_contact_number_2 }}
+                    </div>
+
+                    <div class="form-control sm:col-span-2">
+                        <label class="label"><span class="label-text">Allergic History</span></label>
+                        {{ form.allergic_history }}
+                    </div>
+
+                    <div class="form-control sm:col-span-2">
+                        <label class="label"><span class="label-text">Special Clinical Notes</span></label>
+                        {{ form.special_note }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="flex items-center justify-end gap-3 pt-4">
+            <a href="{% url 'clients:client-list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary min-w-[140px]">Save Patient</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
