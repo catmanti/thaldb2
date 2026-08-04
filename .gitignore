@@ -7,8 +7,32 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
 
-# Database
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Databases
 *.db
 *.sqlite3
+
+# Media uploads (keep directory, ignore uploaded files)
+media/*
+!media/.gitkeep
+
+# Environment variables & secrets
+.env
+*.env
+.env.local
+
+# OS & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
