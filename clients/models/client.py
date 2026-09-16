@@ -108,8 +108,20 @@ class Client(models.Model):
     @property
     def age_string(self):
         age_data = self.precise_age
-        return f"{age_data['years']} years, {age_data['months']} months, and {age_data['days']} days"
-
+        return f"{age_data['years']} y, {age_data['months']} m, and {age_data['days']} d"
+    @property
+    def initials_with_last_name(self):
+        full_name_parts = self.full_name.split()
+        if len(full_name_parts) == 0:
+            return ""
+        elif len(full_name_parts) == 1:
+            return full_name_parts[0][0].upper() + "."
+        else:
+            initials = ""
+            for part in full_name_parts[:-1]:
+                initials += part[0].upper() + ". "
+            initials += full_name_parts[-1]
+            return initials
     @property
     def primary_care_unit(self):
         primary_link = self.care_links.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY).first()

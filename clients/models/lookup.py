@@ -107,6 +107,7 @@ class DiagnosisType(models.Model):
     """
 
     name = models.CharField(max_length=100, unique=True)
+    short_name = models.CharField(max_length=20, blank=True, null=True)  # for label abbreviation
     description = models.TextField(blank=True, null=True)
     icd_code = models.CharField(max_length=20, blank=True, null=True)
 

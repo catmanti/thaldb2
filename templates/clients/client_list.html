@@ -25,7 +25,8 @@
                 <!-- Search Query -->
                 <div class="form-control lg:col-span-2">
                     <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Search Patient</span></label>
-                    <input type="text" name="q" value="{{ query }}" placeholder="Search by Reg No, Name, NIC, or Phone..." class="input input-bordered input-sm w-full">
+                    <input type="text" name="q" value="{{ query }}" placeholder="Search by Reg No, Name, NIC, or Phone..."
+                        class="input input-bordered input-sm w-full">
                 </div>
 
                 <!-- Diagnosis Filter -->
@@ -68,7 +69,8 @@
                     <tr>
                         <th>Reg. No</th>
                         <th>Patient Name</th>
-                        <th>Age / Gender</th>
+                        <th>Age</th>
+                        <th>Gender</th>
                         <th>Diagnosis</th>
                         <th>Primary Unit</th>
                         <th>Contact</th>
@@ -92,7 +94,7 @@
                                 </div>
                                 <div>
                                     <a href="{% url 'clients:client-detail' client.pk %}" class="font-bold hover:underline text-base-content">
-                                        {{ client.full_name }}
+                                        {{ client.initials_with_last_name }}
                                     </a>
                                     {% if client.common_name %}
                                     <p class="text-xs text-base-content/60">({{ client.common_name }})</p>
@@ -101,19 +103,21 @@
                             </div>
                         </td>
                         <td>
-                            <span class="font-semibold">{{ client.age|default:"--" }} yrs</span>
+                            <span class="font-semibold">{{ client.age_string|default:"--"}}</span>
+                        </td>
+                        <td>
                             <span class="badge badge-ghost badge-xs uppercase ml-1">{{ client.gender }}</span>
                         </td>
                         <td>
                             {% if client.diagnosis %}
-                            <span class="badge badge-info badge-outline font-medium text-xs">{{ client.diagnosis.name }}</span>
+                            <span class="badge badge-info badge-outline font-medium text-xs">{{ client.diagnosis.short_name }}</span>
                             {% else %}
                             <span class="text-base-content/40 italic">Not set</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if client.primary_care_unit %}
-                            <span class="badge badge-secondary badge-xs">{{ client.primary_care_unit.name }}</span>
+                            <span class="badge badge-info badge-outline">{{ client.primary_care_unit.name }}</span>
                             {% else %}
                             <span class="text-base-content/40 italic">None</span>
                             {% endif %}
@@ -133,8 +137,10 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" class="text-center py-8 text-base-content/60">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <p class="font-bold">No clients found</p>
                             <p class="text-xs mt-1">Try adjusting your search query or filters.</p>
@@ -150,11 +156,13 @@
         <div class="p-4 border-t border-base-200 flex justify-center">
             <div class="join">
                 {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}" class="join-item btn btn-sm">«</a>
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+                    class="join-item btn btn-sm">«</a>
                 {% endif %}
                 <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
                 {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}" class="join-item btn btn-sm">»</a>
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+                    class="join-item btn btn-sm">»</a>
                 {% endif %}
             </div>
         </div>

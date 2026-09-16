@@ -109,8 +109,8 @@ class ThalassemiaUnitAdmin(admin.ModelAdmin):
 class DiagnosisTypeAdmin(admin.ModelAdmin):
     """Admin for DiagnosisType"""
 
-    list_display = ["name", "icd_code"]
-    search_fields = ["name", "icd_code"]
+    list_display = ["name", "short_name", "icd_code"]
+    search_fields = ["name", "short_name", "icd_code"]
     ordering = ["name"]
 
 

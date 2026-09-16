@@ -1,20 +1,23 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="{{ request.user.color_scheme|default:'light' }}" class="{% if request.user.dark_mode %}dark{% endif %} h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ThalDB EMR - Thalassemia Care System{% endblock %}</title>
-    
+    <title>{% block title %}Thalassemia Patient Management System{% endblock %}</title>
+
     <!-- Compiled Tailwind CSS + DaisyUI -->
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    
+    <link rel="stylesheet" href="{% static 'css/output.css' %}?v=1.1">
+
     <!-- Offline HTMX -->
     <script src="{% static 'js/htmx.min.js' %}"></script>
-    
+
     {% block extra_head %}{% endblock %}
 </head>
-<body class="min-h-full flex flex-col bg-base-200 text-base-content font-sans antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-user-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+
+<body class="min-h-full flex flex-col bg-base-200 text-base-content font-sans antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    data-user-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
 
     <!-- Navigation Header -->
     <header class="sticky top-0 z-50 shadow-md">
@@ -38,9 +41,11 @@
                 </div>
                 {% endif %}
 
-                <a href="{% if request.user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="btn btn-ghost text-xl font-bold gap-2 normal-case text-primary">
+                <a href="{% if request.user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}"
+                    class="btn btn-ghost text-xl font-bold gap-2 normal-case text-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-500 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <path
+                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                     </svg>
                     <span>ThalDB<span class="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase ml-1">EMR</span></span>
                 </a>
@@ -66,7 +71,8 @@
                 <div class="dropdown dropdown-end">
                     <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" title="Change Theme">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                         </svg>
                     </label>
                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-48 text-sm gap-1">
@@ -103,7 +109,8 @@
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-error btn-outline btn-xs w-full justify-start gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
                                     Sign Out
                                 </button>
@@ -122,7 +129,8 @@
     {% if messages %}
     <div class="max-w-7xl mx-auto px-4 pt-4 w-full">
         {% for message in messages %}
-        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} shadow-lg mb-3">
+        <div
+            class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} shadow-lg mb-3">
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -163,4 +171,5 @@
     </script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
