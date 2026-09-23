@@ -88,9 +88,9 @@
 
                 <!-- User Profile Dropdown -->
                 <div class="dropdown dropdown-end">
-                    <label tabindex="0" class="btn btn-ghost btn-circle avatar border border-primary/30">
-                        <div class="w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold uppercase text-sm">
-                            {{ request.user.first_name|default:request.user.email|slice:":1" }}
+                    <label tabindex="0" class="btn btn-ghost btn-circle avatar placeholder border border-primary/30">
+                        <div class="w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+                            <span class="font-bold uppercase text-sm">{{ request.user.first_name|default:request.user.email|slice:":1" }}</span>
                         </div>
                     </label>
                     <div tabindex="0" class="dropdown-content z-[1] card card-compact w-64 p-3 shadow-xl bg-base-100 border border-base-300 mt-3">

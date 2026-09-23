@@ -112,7 +112,7 @@ class Client(models.Model):
     @property
     def age_string(self):
         age_data = self.precise_age
-        return f"{age_data['years']} y, {age_data['months']} m, and {age_data['days']} d"
+        return f"{age_data['years']}y, {age_data['months']}m, {age_data['days']}d"
     @property
     def initials_with_last_name(self):
         full_name_parts = self.full_name.split()
