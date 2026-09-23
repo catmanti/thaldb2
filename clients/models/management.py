@@ -116,7 +116,7 @@ class Admission(TimeStampedModel):
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Admission on {self.date_of_admission} - {self.client.full_name}"
+        return f"Admission on {self.date_of_admission} - {self.client.initials_with_last_name}"
 
     def get_absolute_url(self):
         """Return the client detail URL after admission operations."""

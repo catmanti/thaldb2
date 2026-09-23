@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 
-from .models import Client, District, DS_Division, Province
+from .models import Admission, Client, District, DS_Division, Province, Transfusion
 
 
 class ClientForm(forms.ModelForm):
@@ -124,3 +124,60 @@ class ClientForm(forms.ModelForm):
             self.fields["ds_division"].queryset = DS_Division.objects.filter(
                 district=self.instance.ds_division.district
             ).order_by("name")
+
+
+class AdmissionForm(forms.ModelForm):
+    class Meta:
+        model = Admission
+        fields = [
+            "date_of_admission",
+            "reason_for_admission",
+            "date_of_discharge",
+            "outcome",
+            "notes",
+        ]
+        widgets = {
+            "date_of_admission": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "reason_for_admission": forms.Select(attrs={"class": "select select-bordered w-full"}),
+            "date_of_discharge": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "outcome": forms.TextInput(attrs={"class": "input input-bordered w-full", "placeholder": "Discharge status / outcome"}),
+            "notes": forms.Textarea(attrs={"class": "textarea textarea-bordered w-full", "rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.initial.get("date_of_admission") and not self.instance.pk:
+            self.initial["date_of_admission"] = timezone.localdate()
+
+
+class TransfusionForm(forms.ModelForm):
+    class Meta:
+        model = Transfusion
+        fields = [
+            "date_of_transfusion",
+            "pre_HB_level",
+            "post_HB_level",
+            "amount_of_blood",
+            "special_type",
+            "next_date_given",
+            "reaction",
+            "checked_by",
+            "remarks",
+        ]
+        widgets = {
+            "date_of_transfusion": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "pre_HB_level": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "0.1", "placeholder": "9.0"}),
+            "post_HB_level": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "0.1"}),
+            "amount_of_blood": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "10", "placeholder": "250"}),
+            "special_type": forms.Select(attrs={"class": "select select-bordered w-full"}),
+            "next_date_given": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "reaction": forms.TextInput(attrs={"class": "input input-bordered w-full", "placeholder": "None"}),
+            "checked_by": forms.TextInput(attrs={"class": "input input-bordered w-full", "placeholder": "Staff Name / Designation"}),
+            "remarks": forms.Textarea(attrs={"class": "textarea textarea-bordered w-full", "rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.initial.get("date_of_transfusion") and not self.instance.pk:
+            self.initial["date_of_transfusion"] = timezone.localdate()
+

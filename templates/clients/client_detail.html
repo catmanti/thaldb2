@@ -117,44 +117,7 @@
         <!-- Main History Sections -->
         <div class="lg:col-span-2 space-y-4">
             <!-- Admissions & Transfusions Card -->
-            <div class="card bg-base-100 shadow border border-base-300">
-                <div class="card-body p-5">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
-                        <span>🩸 Hospital Admissions & Transfusions</span>
-                        <span class="badge badge-primary badge-sm">{{ admissions|length }}</span>
-                    </h3>
-
-                    {% if admissions %}
-                    <div class="space-y-4 mt-3">
-                        {% for adm in admissions %}
-                        <div class="p-4 rounded-xl bg-base-200/50 border border-base-300 space-y-2">
-                            <div class="flex items-center justify-between text-xs font-bold">
-                                <span class="text-primary">Admission: {{ adm.date_of_admission }}</span>
-                                <span class="badge badge-ghost badge-sm">Discharged: {{ adm.date_of_discharge|default:"Active / Not discharged" }}</span>
-                            </div>
-                            <p class="text-xs text-base-content/80"><strong>Reason:</strong> {{ adm.reason_for_admission.name|default:adm.reason_for_admission }}</p>
-
-                            {% if adm.blood_transfusions.all %}
-                            <div class="mt-2 pt-2 border-t border-base-300/60 space-y-1">
-                                <span class="text-xs font-bold text-error uppercase">Transfusions Given:</span>
-                                {% for tr in adm.blood_transfusions.all %}
-                                <div class="text-xs flex flex-wrap justify-between bg-base-100 p-2 rounded border border-base-200">
-                                    <span>Date: <strong>{{ tr.date_of_transfusion }}</strong></span>
-                                    <span>Pre-Hb: <strong>{{ tr.pre_HB_level|default:"--" }} g/dL</strong></span>
-                                    <span>Post-Hb: <strong>{{ tr.post_HB_level|default:"--" }} g/dL</strong></span>
-                                    <span>Amount: <strong>{{ tr.amount_of_blood|default:"--" }} mL</strong></span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="text-xs text-base-content/60 italic py-4 text-center">No admissions or transfusions recorded yet.</p>
-                    {% endif %}
-                </div>
-            </div>
+            {% include "clients/partials/admissions_list_partial.html" %}
 
             <!-- Clinic Visits Card -->
             <div class="card bg-base-100 shadow border border-base-300">
@@ -232,4 +195,7 @@
         </div>
     </div>
 </div>
+
+<!-- HTMX Modal Container -->
+<div id="modal-container"></div>
 {% endblock %}

@@ -1,0 +1,49 @@
+<div class="modal modal-open bg-black/50 backdrop-blur-xs flex items-center justify-center fixed inset-0 z-50 p-4">
+    <div class="modal-box bg-base-100 max-w-lg w-full shadow-2xl border border-base-300 rounded-2xl relative p-6 space-y-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-base-200 pb-3">
+            <h3 class="font-extrabold text-lg text-base-content flex items-center gap-2">
+                <span>🏥</span> {{ modal_title }}
+            </h3>
+            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="document.getElementById('modal-container').innerHTML = ''">✕</button>
+        </div>
+
+        <!-- Form -->
+        <form hx-post="{{ request.path }}" hx-target="#modal-container" hx-swap="innerHTML" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Date of Admission</span></label>
+                {{ form.date_of_admission }}
+                {% if form.date_of_admission.errors %}<p class="text-xs text-error mt-1">{{ form.date_of_admission.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Reason for Admission</span></label>
+                {{ form.reason_for_admission }}
+                {% if form.reason_for_admission.errors %}<p class="text-xs text-error mt-1">{{ form.reason_for_admission.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Discharge Date (Optional)</span></label>
+                    {{ form.date_of_discharge }}
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Discharge Outcome</span></label>
+                    {{ form.outcome }}
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Clinical Ward Notes</span></label>
+                {{ form.notes }}
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-base-200">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-container').innerHTML = ''">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm px-6">Save Admission</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,91 @@
+<div id="admissions-card" class="card bg-base-100 shadow border border-base-300" hx-get="{% url 'clients:admissions-partial' client.pk %}" hx-trigger="reloadAdmissions from:body" hx-swap="outerHTML">
+    <div class="card-body p-5">
+        <div class="flex items-center justify-between border-b border-base-200 pb-2">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-primary flex items-center gap-2">
+                <span>🩸 Hospital Admissions & Transfusions</span>
+                <span class="badge badge-primary badge-sm">{{ admissions|length }}</span>
+            </h3>
+            <button type="button" 
+                    hx-get="{% url 'clients:admission-create' client.pk %}" 
+                    hx-target="#modal-container" 
+                    hx-swap="innerHTML" 
+                    class="btn btn-primary btn-xs gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Log Admission
+            </button>
+        </div>
+
+        {% if admissions %}
+        <div class="space-y-4 mt-3">
+            {% for adm in admissions %}
+            <div class="p-4 rounded-xl bg-base-200/50 border border-base-300 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold">
+                    <div class="flex items-center gap-2">
+                        <span class="text-primary">Admission: {{ adm.date_of_admission }}</span>
+                        <button type="button" 
+                                hx-get="{% url 'clients:admission-update' adm.pk %}" 
+                                hx-target="#modal-container" 
+                                hx-swap="innerHTML" 
+                                class="btn btn-ghost btn-xs text-info px-1 py-0 h-auto font-normal">
+                            Edit
+                        </button>
+                    </div>
+                    <span class="badge badge-ghost badge-sm">
+                        {% if adm.date_of_discharge %}Discharged: {{ adm.date_of_discharge }}{% else %}Active / In-patient{% endif %}
+                    </span>
+                </div>
+                <p class="text-xs text-base-content/80">
+                    <strong>Reason:</strong> {{ adm.reason_for_admission.name|default:adm.reason_for_admission|default:"N/A" }}
+                    {% if adm.notes %}<span class="text-base-content/60 ml-2">({{ adm.notes }})</span>{% endif %}
+                </p>
+
+                <!-- Transfusions Header & Add Button -->
+                <div class="mt-2 pt-2 border-t border-base-300/60 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-error uppercase flex items-center gap-1">
+                            <span>💉</span> Transfusions Given:
+                        </span>
+                        <button type="button" 
+                                hx-get="{% url 'clients:transfusion-create' adm.pk %}" 
+                                hx-target="#modal-container" 
+                                hx-swap="innerHTML" 
+                                class="btn btn-error btn-outline btn-xs gap-1">
+                            + Add Transfusion
+                        </button>
+                    </div>
+
+                    {% if adm.blood_transfusions.all %}
+                    <div class="space-y-1">
+                        {% for tr in adm.blood_transfusions.all %}
+                        <div class="text-xs flex flex-wrap items-center justify-between bg-base-100 p-2 rounded border border-base-200 gap-2">
+                            <span>Date: <strong>{{ tr.date_of_transfusion }}</strong></span>
+                            <span>Pre-Hb: <strong>{{ tr.pre_HB_level|default:"--" }} g/dL</strong></span>
+                            <span>Post-Hb: <strong>{{ tr.post_HB_level|default:"--" }} g/dL</strong></span>
+                            <span>Amount: <strong>{{ tr.amount_of_blood|default:"--" }} mL</strong></span>
+                            {% if tr.special_type %}
+                            <span class="badge badge-warning badge-xs">{{ tr.special_type.name }}</span>
+                            {% endif %}
+                            <button type="button" 
+                                    hx-get="{% url 'clients:transfusion-update' tr.pk %}" 
+                                    hx-target="#modal-container" 
+                                    hx-swap="innerHTML" 
+                                    class="btn btn-ghost btn-xs text-info">
+                                Edit
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/50 italic py-1">No transfusions recorded under this admission yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-base-content/60 italic py-4 text-center">No hospital admissions or transfusions recorded yet.</p>
+        {% endif %}
+    </div>
+</div>

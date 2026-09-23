@@ -1,0 +1,69 @@
+<div class="modal modal-open bg-black/50 backdrop-blur-xs flex items-center justify-center fixed inset-0 z-50 p-4">
+    <div class="modal-box bg-base-100 max-w-lg w-full shadow-2xl border border-base-300 rounded-2xl relative p-6 space-y-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-base-200 pb-3">
+            <h3 class="font-extrabold text-lg text-base-content flex items-center gap-2">
+                <span>🩸</span> {{ modal_title }}
+            </h3>
+            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="document.getElementById('modal-container').innerHTML = ''">✕</button>
+        </div>
+
+        <!-- Form -->
+        <form hx-post="{{ request.path }}" hx-target="#modal-container" hx-swap="innerHTML" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Transfusion Date</span></label>
+                    {{ form.date_of_transfusion }}
+                    {% if form.date_of_transfusion.errors %}<p class="text-xs text-error mt-1">{{ form.date_of_transfusion.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Special Blood Type</span></label>
+                    {{ form.special_type }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Pre-Hb (g/dL)</span></label>
+                    {{ form.pre_HB_level }}
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Post-Hb (g/dL)</span></label>
+                    {{ form.post_HB_level }}
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Volume (mL)</span></label>
+                    {{ form.amount_of_blood }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Next Scheduled Date</span></label>
+                    {{ form.next_date_given }}
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text font-semibold">Transfusion Reaction</span></label>
+                    {{ form.reaction }}
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Checked / Given By</span></label>
+                {{ form.checked_by }}
+            </div>
+
+            <div class="form-control">
+                <label class="label py-1"><span class="label-text font-semibold">Remarks & Notes</span></label>
+                {{ form.remarks }}
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-base-200">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-container').innerHTML = ''">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm px-6">Save Transfusion</button>
+            </div>
+        </form>
+    </div>
+</div>

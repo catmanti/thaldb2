@@ -1,23 +1,27 @@
+process.env.BROWSERSLIST_IGNORE_OLD_DATA = "true";
+process.env.BROWSERSLIST_DISABLE_WARNINGS = "1";
+
 const fs = require("fs");
+const path = require("path");
 const postcss = require("postcss");
 const tailwindcss = require("tailwindcss");
-const autoprefixer = require("autoprefixer");
 
 async function buildCSS() {
-  fs.writeFileSync("status.txt", "Reading input.css...\n");
-  const css = fs.readFileSync("./static/css/input.css", "utf8");
+  const inputPath = path.resolve(__dirname, "static/css/input.css");
+  const outputPath = path.resolve(__dirname, "static/css/output.css");
+  const configPath = path.resolve(__dirname, "tailwind.config.js");
 
-  fs.appendFileSync("status.txt", "Compiling PostCSS...\n");
+  const css = fs.readFileSync(inputPath, "utf8");
+
   const result = await postcss([
-    tailwindcss("./tailwind.config.js"),
-    autoprefixer,
-  ]).process(css, { from: "./static/css/input.css", to: "./static/css/output.css" });
+    tailwindcss(configPath),
+  ]).process(css, { from: inputPath, to: outputPath });
 
-  fs.writeFileSync("./static/css/output.css", result.css);
-  fs.appendFileSync("status.txt", `DONE! Output CSS size: ${(result.css.length / 1024).toFixed(1)} KB\n`);
+  fs.writeFileSync(outputPath, result.css);
+  console.log(`SUCCESS! Generated output.css size: ${(result.css.length / 1024).toFixed(1)} KB`);
 }
 
 buildCSS().catch((err) => {
-  fs.appendFileSync("status.txt", `ERROR: ${err.stack}\n`);
+  console.error("Build failed:", err);
   process.exit(1);
 });

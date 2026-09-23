@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .forms import ClientForm
-from .models import Client, ClientCareUnit, District, DS_Division
+from .forms import AdmissionForm, ClientForm, TransfusionForm
+from .models import Admission, Client, ClientCareUnit, District, DS_Division, Transfusion
 
 
 # -------------------------------------------------------------------
@@ -149,3 +149,128 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["page_title"] = f"Edit Client: {self.object.full_name}"
         return context
+
+
+# -------------------------------------------------------------------
+#                 ADMISSION & TRANSFUSION CRUD VIEWS
+# -------------------------------------------------------------------
+def client_admissions_partial_view(request, client_id):
+    """HTMX partial returning updated Admissions & Transfusions card."""
+    client = get_object_or_404(Client, pk=client_id)
+    admissions = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
+    return render(request, "clients/partials/admissions_list_partial.html", {"client": client, "admissions": admissions})
+
+
+class AdmissionCreateView(LoginRequiredMixin, CreateView):
+    """Log a new hospital ward admission for a patient."""
+
+    model = Admission
+    form_class = AdmissionForm
+    template_name = "clients/modals/admission_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.client_obj = get_object_or_404(Client, pk=self.kwargs["client_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.client = self.client_obj
+        admission = form.save()
+        messages.success(self.request, f"Admission logged for {self.client_obj.full_name}.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "reloadAdmissions"
+            return response
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["client"] = self.client_obj
+        context["modal_title"] = f"Log Admission - {self.client_obj.initials_with_last_name}"
+        return context
+
+
+class AdmissionUpdateView(LoginRequiredMixin, UpdateView):
+    """Edit or discharge an admission."""
+
+    model = Admission
+    form_class = AdmissionForm
+    template_name = "clients/modals/admission_form_modal.html"
+
+    def form_valid(self, form):
+        admission = form.save()
+        messages.success(self.request, "Admission record updated.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "reloadAdmissions"
+            return response
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["client"] = self.object.client
+        context["modal_title"] = f"Edit Admission - {self.object.client.initials_with_last_name}"
+        return context
+
+
+class TransfusionCreateView(LoginRequiredMixin, CreateView):
+    """Log a blood transfusion under a specific hospital admission."""
+
+    model = Transfusion
+    form_class = TransfusionForm
+    template_name = "clients/modals/transfusion_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.admission_obj = get_object_or_404(Admission, pk=self.kwargs["admission_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.admission = self.admission_obj
+        transfusion = form.save()
+        messages.success(self.request, "Blood transfusion logged successfully.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "reloadAdmissions"
+            return response
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.admission_obj.client.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["admission"] = self.admission_obj
+        context["client"] = self.admission_obj.client
+        context["modal_title"] = f"Log Transfusion - {self.admission_obj.client.initials_with_last_name}"
+        return context
+
+
+class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
+    """Edit a transfusion record."""
+
+    model = Transfusion
+    form_class = TransfusionForm
+    template_name = "clients/modals/transfusion_form_modal.html"
+
+    def form_valid(self, form):
+        transfusion = form.save()
+        messages.success(self.request, "Transfusion record updated.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "reloadAdmissions"
+            return response
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.admission.client.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["admission"] = self.object.admission
+        context["client"] = self.object.admission.client
+        context["modal_title"] = f"Edit Transfusion - {self.object.admission.client.initials_with_last_name}"
+        return context
+
