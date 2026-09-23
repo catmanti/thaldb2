@@ -8,7 +8,7 @@ const tailwindcss = require("tailwindcss");
 
 async function buildCSS() {
   const inputPath = path.resolve(__dirname, "static/css/input.css");
-  const outputPath = path.resolve(__dirname, "static/css/output.css");
+  const outputPath = path.resolve(__dirname, "static/css/app.css");
   const configPath = path.resolve(__dirname, "tailwind.config.js");
 
   const css = fs.readFileSync(inputPath, "utf8");
@@ -18,7 +18,7 @@ async function buildCSS() {
   ]).process(css, { from: inputPath, to: outputPath });
 
   fs.writeFileSync(outputPath, result.css);
-  console.log(`SUCCESS! Generated output.css size: ${(result.css.length / 1024).toFixed(1)} KB`);
+  console.log(`SUCCESS! Generated app.css size: ${(result.css.length / 1024).toFixed(1)} KB`);
 }
 
 buildCSS().catch((err) => {

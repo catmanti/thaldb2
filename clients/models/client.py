@@ -1,12 +1,16 @@
+import os
 from datetime import date
+from io import BytesIO
 from typing import ClassVar
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError  # type: ignore[reportMissingModuleSource]
+from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import F, Q
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image, ImageOps
 
 from .lookup import DiagnosisType, DS_Division, ThalassemiaUnit
 
@@ -126,6 +130,23 @@ class Client(models.Model):
     def primary_care_unit(self):
         primary_link = self.care_links.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY).first()
         return primary_link.unit if primary_link else None
+
+    def save(self, *args, **kwargs):
+        # Auto-crop to center square 1:1 and resize uploaded photo to 400x400 JPEG
+        if self.photo and hasattr(self.photo, "file"):
+            try:
+                img = Image.open(self.photo)
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                img_cropped = ImageOps.fit(img, (400, 400), Image.Resampling.LANCZOS)
+                buffer = BytesIO()
+                img_cropped.save(buffer, format="JPEG", quality=85, optimize=True)
+                file_name = os.path.basename(self.photo.name)
+                self.photo.save(file_name, ContentFile(buffer.getvalue()), save=False)
+            except Exception:
+                pass  # Fallback gracefully if non-image data
+
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["full_name"]

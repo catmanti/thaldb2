@@ -1,4 +1,7 @@
+from io import BytesIO
+from PIL import Image
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -6,6 +9,27 @@ from django.utils import timezone
 from clients.models import Admission, Choice, Client, Transfusion
 
 User = get_user_model()
+
+
+class ClientPhotoOptimizationTests(TestCase):
+    def test_client_photo_auto_crop_and_resize(self):
+        # Generate a large 1200x800 RGB test image
+        img = Image.new("RGB", (1200, 800), color="blue")
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG")
+        uploaded = SimpleUploadedFile("large_photo.jpg", buffer.getvalue(), content_type="image/jpeg")
+
+        client = Client.objects.create(
+            registration_number="TH-2026-888",
+            full_name="Photo Test Patient",
+            gender="F",
+            date_of_birth="2018-01-01",
+            photo=uploaded,
+        )
+
+        # Open saved photo and verify dimensions are cropped & resized to 400x400
+        saved_img = Image.open(client.photo.path)
+        self.assertEqual(saved_img.size, (400, 400))
 
 
 class AdmissionTransfusionWorkflowTests(TestCase):
