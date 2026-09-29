@@ -214,6 +214,14 @@
     text-decoration-line: underline;
   }
 }
+@media (prefers-color-scheme: dark) {
+  .dark\:block {
+    display: block;
+  }
+  .dark\:hidden {
+    display: none;
+  }
+}
 @property --tw-rotate-x {
   syntax: "*";
   inherits: false;

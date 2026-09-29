@@ -71,23 +71,18 @@
             <div class="navbar-end gap-2">
                 {% if request.user.is_authenticated %}
                 <!-- Quick Theme Toggle -->
-                <div class="dropdown dropdown-end">
-                    <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" title="Change Theme">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                        </svg>
-                    </label>
-                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-48 text-sm gap-1">
-                        <li class="menu-title text-xs font-bold text-base-content/60">UI Theme</li>
-                        <li><button type="button" onclick="setAppTheme('light')" class="justify-between">Light ☀️</button></li>
-                        <li><button type="button" onclick="setAppTheme('dark')" class="justify-between">Dark 🌙</button></li>
-                        <li><button type="button" onclick="setAppTheme('emerald')" class="justify-between">Emerald 🌿</button></li>
-                        <li><button type="button" onclick="setAppTheme('corporate')" class="justify-between">Corporate 🏢</button></li>
-                        <li><button type="button" onclick="setAppTheme('night')" class="justify-between">Night 🌃</button></li>
-                        <li><button type="button" onclick="setAppTheme('dim')" class="justify-between">Dim 🌘</button></li>
-                    </ul>
-                </div>
+                <button type="button" onclick="toggleAppTheme()" class="btn btn-ghost btn-circle btn-sm" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                    <!-- Sun Icon (visible in dark mode) -->
+                    <svg id="theme-sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon Icon (visible in light mode) -->
+                    <svg id="theme-moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 block dark:hidden text-base-content/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
 
                 <!-- User Profile Dropdown -->
                 <div class="dropdown dropdown-end">
@@ -158,8 +153,10 @@
     <!-- Theme Switcher Script -->
     <script>
         function setAppTheme(themeName) {
-            document.documentElement.setAttribute('data-theme', themeName);
-            if (themeName === 'dark' || themeName === 'night' || themeName === 'dim') {
+            const isDark = themeName === 'dark';
+            const targetTheme = isDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            if (isDark) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
@@ -167,9 +164,15 @@
             // Send theme preference to backend via HTMX if user is logged in
             if (document.body.dataset.userAuthenticated === 'true' && window.htmx) {
                 htmx.ajax('POST', '{% url "update_preferences" %}', {
-                    values: { color_scheme: themeName }
+                    values: { color_scheme: targetTheme, dark_mode: isDark }
                 });
             }
+        }
+
+        function toggleAppTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setAppTheme(newTheme);
         }
     </script>
     {% block extra_js %}{% endblock %}

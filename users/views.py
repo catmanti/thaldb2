@@ -49,10 +49,13 @@ def update_preferences_view(request):
     updated = False
     if color_scheme and color_scheme in [c[0] for c in user.COLOR_SCHEME_CHOICES]:
         user.color_scheme = color_scheme
+        user.dark_mode = (color_scheme == "dark")
         updated = True
 
     if dark_mode is not None:
-        user.dark_mode = dark_mode.lower() in ("true", "1", "yes")
+        is_dark = dark_mode.lower() in ("true", "1", "yes")
+        user.dark_mode = is_dark
+        user.color_scheme = "dark" if is_dark else "light"
         updated = True
 
     if updated:

@@ -15,10 +15,7 @@ class User(AbstractUser):
         SYSTEM_ADMIN = "SYSTEM_ADMIN", "System Administrator"
 
     COLOR_SCHEME_CHOICES: ClassVar[list[tuple[str, str]]] = [
-        ("blue", "Default Blue"),
-        ("emerald", "Emerald Green"),
-        ("purple", "Royal Purple"),
-        ("slate", "Slate Grey"),
+        ("light", "Light Mode"),
         ("dark", "Dark Mode"),
     ]
 
@@ -39,7 +36,7 @@ class User(AbstractUser):
 
     # --- Preferences & UI Settings ---
     dark_mode = models.BooleanField(default=False)
-    color_scheme = models.CharField(max_length=20, choices=COLOR_SCHEME_CHOICES, default="blue")
+    color_scheme = models.CharField(max_length=20, choices=COLOR_SCHEME_CHOICES, default="light")
     preferences = models.JSONField(default=dict, blank=True)
 
     objects = CustomUserManager()
