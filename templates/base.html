@@ -155,23 +155,35 @@
         function setAppTheme(themeName) {
             const isDark = themeName === 'dark';
             const targetTheme = isDark ? 'dark' : 'light';
+
+            // 1. Immediately update DOM attributes for instant UI response
             document.documentElement.setAttribute('data-theme', targetTheme);
             if (isDark) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
-            // Send theme preference to backend via HTMX if user is logged in
-            if (document.body.dataset.userAuthenticated === 'true' && window.htmx) {
-                htmx.ajax('POST', '{% url "update_preferences" %}', {
-                    values: { color_scheme: targetTheme, dark_mode: isDark }
-                });
+
+            // 2. Persist preference to Django backend asynchronously without DOM swap
+            if (document.body.dataset.userAuthenticated === 'true') {
+                const formData = new FormData();
+                formData.append('color_scheme', targetTheme);
+                formData.append('dark_mode', isDark);
+
+                fetch('{% url "update_preferences" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: formData
+                }).catch(err => console.error('Failed to save theme preference:', err));
             }
         }
 
         function toggleAppTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const isCurrentlyDark = document.documentElement.classList.contains('dark') || currentTheme === 'dark';
+            const newTheme = isCurrentlyDark ? 'light' : 'dark';
             setAppTheme(newTheme);
         }
     </script>
