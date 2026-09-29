@@ -178,7 +178,7 @@ class AdmissionCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, f"Admission logged for {self.client_obj.full_name}.")
 
         if self.request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("", status=200)
             response["HX-Trigger"] = "reloadAdmissions"
             return response
         return super().form_valid(form)
@@ -202,7 +202,7 @@ class AdmissionUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Admission record updated.")
 
         if self.request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("", status=200)
             response["HX-Trigger"] = "reloadAdmissions"
             return response
         return super().form_valid(form)
@@ -231,7 +231,7 @@ class TransfusionCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, "Blood transfusion logged successfully.")
 
         if self.request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("", status=200)
             response["HX-Trigger"] = "reloadAdmissions"
             return response
         return super().form_valid(form)
@@ -259,7 +259,7 @@ class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Transfusion record updated.")
 
         if self.request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("", status=200)
             response["HX-Trigger"] = "reloadAdmissions"
             return response
         return super().form_valid(form)

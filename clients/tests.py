@@ -60,7 +60,7 @@ class AdmissionTransfusionWorkflowTests(TestCase):
             },
             HTTP_HX_REQUEST="true",
         )
-        self.assertEqual(resp.status_code, 204)
+        self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("HX-Trigger"), "reloadAdmissions")
         self.assertEqual(Admission.objects.count(), 1)
 
@@ -80,7 +80,7 @@ class AdmissionTransfusionWorkflowTests(TestCase):
             },
             HTTP_HX_REQUEST="true",
         )
-        self.assertEqual(resp_tr.status_code, 204)
+        self.assertEqual(resp_tr.status_code, 200)
         self.assertEqual(resp_tr.headers.get("HX-Trigger"), "reloadAdmissions")
         self.assertEqual(Transfusion.objects.count(), 1)
 

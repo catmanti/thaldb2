@@ -9,7 +9,7 @@
         </div>
 
         <!-- Form -->
-        <form hx-post="{{ request.path }}" hx-target="#modal-container" hx-swap="innerHTML" class="space-y-4">
+        <form hx-post="{{ request.path }}" hx-target="#modal-container" hx-swap="innerHTML" hx-on::after-request="if (event.detail.successful) document.getElementById('modal-container').innerHTML = ''" class="space-y-4">
             {% csrf_token %}
 
             <div class="form-control">
