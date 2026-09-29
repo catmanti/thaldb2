@@ -1,5 +1,8 @@
 /*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */
 @layer properties;
+.collapse {
+  visibility: collapse;
+}
 .visible {
   visibility: visible;
 }
@@ -41,6 +44,9 @@
 }
 .hidden {
   display: none;
+}
+.inline {
+  display: inline;
 }
 .inline-block {
   display: inline-block;
