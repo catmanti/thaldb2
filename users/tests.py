@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -28,6 +29,11 @@ class CustomUserManagerTests(TestCase):
     def test_create_user_email_normalized(self):
         user = User.objects.create_user(email="DOCTOR@Hospital.LK", password="pass")
         self.assertEqual(user.email, "DOCTOR@hospital.lk")
+
+    def test_create_user_duplicate_email_raises_integrity_error(self):
+        User.objects.create_user(email="duplicate@hospital.lk", password="pass1")
+        with self.assertRaises(IntegrityError):
+            User.objects.create_user(email="duplicate@hospital.lk", password="pass2")
 
     def test_create_user_without_email_raises_error(self):
         with self.assertRaises(ValueError):
@@ -84,6 +90,21 @@ class UserModelTests(TestCase):
         self.assertTrue(sys_admin.is_unit_admin)
         self.assertFalse(nurse.is_unit_admin)
 
+    def test_user_primary_unit_association(self):
+        unit = ThalassemiaUnit.objects.create(name="Colombo North Hospital Unit")
+        user = User.objects.create_user(email="unit_nurse@hospital.lk", password="pass", primary_unit=unit)
+        self.assertEqual(user.primary_unit, unit)
+        self.assertIn(user, unit.staff_members.all())
+
+    def test_user_preferences_json_field(self):
+        user = User.objects.create_user(
+            email="pref_test@hospital.lk",
+            password="pass",
+            preferences={"notifications_enabled": True, "items_per_page": 25},
+        )
+        self.assertEqual(user.preferences["notifications_enabled"], True)
+        self.assertEqual(user.preferences["items_per_page"], 25)
+
 
 class AuthenticationViewsTests(TestCase):
     """Tests for Login and Logout views."""
@@ -110,6 +131,16 @@ class AuthenticationViewsTests(TestCase):
         response = self.client.post(
             reverse("login"),
             {"username": "testuser@hospital.lk", "password": "wrongpassword"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["form"].is_valid())
+
+    def test_login_inactive_user_fails(self):
+        self.user.is_active = False
+        self.user.save()
+        response = self.client.post(
+            reverse("login"),
+            {"username": "testuser@hospital.lk", "password": self.password},
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context["form"].is_valid())
@@ -177,6 +208,11 @@ class UpdatePreferencesViewTests(TestCase):
             color_scheme="light",
             dark_mode=False,
         )
+
+    def test_update_preferences_get_method_not_allowed(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("update_preferences"))
+        self.assertEqual(response.status_code, 405)  # Method Not Allowed
 
     def test_update_preferences_unauthenticated_redirects(self):
         response = self.client.post(reverse("update_preferences"), {"color_scheme": "dark"})
