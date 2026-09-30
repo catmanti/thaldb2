@@ -4,7 +4,7 @@
         <div class="flex items-center justify-between border-b border-base-200 pb-2">
             <h3 class="font-bold text-sm uppercase tracking-wider text-primary flex items-center gap-2">
                 <span>🧪 Lab Investigations</span>
-                <span class="badge badge-primary badge-sm">{{ investigations|length }}</span>
+                <span class="badge badge-primary badge-sm">{{ total_investigations_count|default:investigations|length }}</span>
             </h3>
             <button type="button" hx-get="{% url 'clients:investigation-create' client.pk %}" hx-target="#modal-container" hx-swap="innerHTML"
                 class="btn btn-primary btn-xs gap-1">
@@ -45,7 +45,7 @@
                         <td class="text-base-content/70">{{ inv.investigation_type.reference_range|default:"--" }}</td>
                         <td>
                             {% if inv.laboratory %}
-                            <span class="badge badge-outline badge-xs" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code }}</span>
+                            <span class="badge badge-outline badge-xs" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code|default:inv.laboratory.name }}</span>
                             {% else %}
                             <span class="text-base-content/50">--</span>
                             {% endif %}
@@ -61,6 +61,39 @@
                 </tbody>
             </table>
         </div>
+
+        {% if has_more_investigations %}
+        <div class="mt-4 pt-3 border-t border-base-200 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs text-base-content/60 font-medium">Showing latest {{ investigations|length }} of {{ total_investigations_count }} lab tests</span>
+            <div class="flex items-center gap-2">
+                <button type="button" 
+                        hx-get="{% url 'clients:investigations-partial' client.pk %}?limit={{ next_investigations_limit }}" 
+                        hx-target="#investigations-card" 
+                        hx-swap="outerHTML" 
+                        class="btn btn-outline btn-primary btn-xs gap-1">
+                    Load 5 More
+                </button>
+                <button type="button" 
+                        hx-get="{% url 'clients:investigations-partial' client.pk %}?limit=all" 
+                        hx-target="#investigations-card" 
+                        hx-swap="outerHTML" 
+                        class="btn btn-ghost btn-xs gap-1 text-base-content/70">
+                    Show All ({{ total_investigations_count }})
+                </button>
+            </div>
+        </div>
+        {% elif total_investigations_count > 5 %}
+        <div class="mt-4 pt-3 border-t border-base-200 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs text-base-content/60 font-medium">Showing all {{ total_investigations_count }} lab tests</span>
+            <button type="button" 
+                    hx-get="{% url 'clients:investigations-partial' client.pk %}?limit=5" 
+                    hx-target="#investigations-card" 
+                    hx-swap="outerHTML" 
+                    class="btn btn-ghost btn-xs gap-1 text-primary">
+                Show Top 5 Only
+            </button>
+        </div>
+        {% endif %}
         {% else %}
         <p class="text-xs text-base-content/60 italic py-4 text-center">No lab investigations recorded yet.</p>
         {% endif %}

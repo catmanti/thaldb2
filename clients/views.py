@@ -105,8 +105,15 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
 
         context["clinic_visits"] = client.clinic_visits.select_related("clinic_type").order_by("-date_visit")
 
+        # Lab Investigations summary (Top 5 recent by default in main card)
         all_investigations = list(client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id"))
-        context["investigations"] = all_investigations
+        total_investigations_count = len(all_investigations)
+        investigations = all_investigations[:5]
+        context["investigations"] = investigations
+        context["total_investigations_count"] = total_investigations_count
+        context["has_more_investigations"] = total_investigations_count > len(investigations)
+        context["next_investigations_limit"] = 10
+        context["current_investigations_limit"] = 5
 
         # Extract latest result per investigation type for quick sidebar display
         latest_inv_map = {}
@@ -327,10 +334,36 @@ class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
 #                     INVESTIGATION CRUD VIEWS
 # -------------------------------------------------------------------
 def client_investigations_partial_view(request, client_id):
-    """HTMX partial returning updated Investigations list card."""
+    """HTMX partial returning updated Investigations list card with limit/pagination support."""
     client = get_object_or_404(Client, pk=client_id)
-    investigations = client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done")
-    return render(request, "clients/partials/investigations_list_partial.html", {"client": client, "investigations": investigations})
+    qs = client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id")
+    total_investigations_count = qs.count()
+    limit_param = request.GET.get("limit", "5")
+
+    if limit_param == "all":
+        investigations = list(qs)
+        current_limit = "all"
+        has_more = False
+        next_limit = None
+    else:
+        try:
+            limit_num = max(1, int(limit_param))
+        except (ValueError, TypeError):
+            limit_num = 5
+        investigations = list(qs[:limit_num])
+        current_limit = limit_num
+        has_more = total_investigations_count > len(investigations)
+        next_limit = limit_num + 5
+
+    context = {
+        "client": client,
+        "investigations": investigations,
+        "total_investigations_count": total_investigations_count,
+        "current_investigations_limit": current_limit,
+        "has_more_investigations": has_more,
+        "next_investigations_limit": next_limit,
+    }
+    return render(request, "clients/partials/investigations_list_partial.html", context)
 
 
 class InvestigationCreateView(LoginRequiredMixin, CreateView):
