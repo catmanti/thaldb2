@@ -91,7 +91,18 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
 
         # Fetch clinical histories
         context["care_units"] = client.care_links.select_related("unit").all()
-        context["admissions"] = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
+        
+        # Admissions summary (Top 5 recent by default)
+        total_admissions_count = client.client_admissions.count()
+        admissions = list(
+            client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")[:5]
+        )
+        context["admissions"] = admissions
+        context["total_admissions_count"] = total_admissions_count
+        context["has_more_admissions"] = total_admissions_count > len(admissions)
+        context["next_admissions_limit"] = 10
+        context["current_admissions_limit"] = 5
+
         context["clinic_visits"] = client.clinic_visits.select_related("clinic_type").order_by("-date_visit")
 
         all_investigations = list(client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id"))
@@ -165,10 +176,37 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
 #                 ADMISSION & TRANSFUSION CRUD VIEWS
 # -------------------------------------------------------------------
 def client_admissions_partial_view(request, client_id):
-    """HTMX partial returning updated Admissions & Transfusions card."""
+    """HTMX partial returning updated Admissions & Transfusions card with limit/pagination support."""
     client = get_object_or_404(Client, pk=client_id)
-    admissions = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
-    return render(request, "clients/partials/admissions_list_partial.html", {"client": client, "admissions": admissions})
+    total_admissions_count = client.client_admissions.count()
+    limit_param = request.GET.get("limit", "5")
+
+    qs = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
+
+    if limit_param == "all":
+        admissions = list(qs)
+        current_limit = "all"
+        has_more = False
+        next_limit = None
+    else:
+        try:
+            limit_num = max(1, int(limit_param))
+        except (ValueError, TypeError):
+            limit_num = 5
+        admissions = list(qs[:limit_num])
+        current_limit = limit_num
+        has_more = total_admissions_count > len(admissions)
+        next_limit = limit_num + 5
+
+    context = {
+        "client": client,
+        "admissions": admissions,
+        "total_admissions_count": total_admissions_count,
+        "current_admissions_limit": current_limit,
+        "has_more_admissions": has_more,
+        "next_admissions_limit": next_limit,
+    }
+    return render(request, "clients/partials/admissions_list_partial.html", context)
 
 
 class AdmissionCreateView(LoginRequiredMixin, CreateView):
