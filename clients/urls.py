@@ -7,9 +7,12 @@ from .views import (
     ClientDetailView,
     ClientListView,
     ClientUpdateView,
+    InvestigationCreateView,
+    InvestigationUpdateView,
     TransfusionCreateView,
     TransfusionUpdateView,
     client_admissions_partial_view,
+    client_investigations_partial_view,
     load_districts_view,
     load_ds_divisions_view,
 )
@@ -27,6 +30,10 @@ urlpatterns = [
     path("admissions/<int:pk>/edit/", AdmissionUpdateView.as_view(), name="admission-update"),
     path("admissions/<int:admission_id>/transfusions/create/", TransfusionCreateView.as_view(), name="transfusion-create"),
     path("transfusions/<int:pk>/edit/", TransfusionUpdateView.as_view(), name="transfusion-update"),
+    # Investigations routes
+    path("<int:client_id>/investigations/create/", InvestigationCreateView.as_view(), name="investigation-create"),
+    path("<int:client_id>/investigations/partial/", client_investigations_partial_view, name="investigations-partial"),
+    path("investigations/<int:pk>/edit/", InvestigationUpdateView.as_view(), name="investigation-update"),
     # HTMX location cascading endpoints
     path("load-districts/", load_districts_view, name="load-districts"),
     path("load-ds-divisions/", load_ds_divisions_view, name="load-ds-divisions"),

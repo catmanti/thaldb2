@@ -1,7 +1,17 @@
 from django import forms
 from django.utils import timezone
 
-from .models import Admission, Client, District, DS_Division, Province, Transfusion
+from .models import (
+    Admission,
+    Client,
+    District,
+    DS_Division,
+    Investigation,
+    InvestigationType,
+    Laboratory,
+    Province,
+    Transfusion,
+)
 
 
 class ClientForm(forms.ModelForm):
@@ -180,4 +190,30 @@ class TransfusionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.initial.get("date_of_transfusion") and not self.instance.pk:
             self.initial["date_of_transfusion"] = timezone.localdate()
+
+
+class InvestigationForm(forms.ModelForm):
+    class Meta:
+        model = Investigation
+        fields = [
+            "investigation_type",
+            "date_done",
+            "value",
+            "text_value",
+            "laboratory",
+            "notes",
+        ]
+        widgets = {
+            "investigation_type": forms.Select(attrs={"class": "select select-bordered w-full"}),
+            "date_done": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "value": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "0.01", "placeholder": "Numeric value (e.g. 2450.5)"}),
+            "text_value": forms.TextInput(attrs={"class": "input input-bordered w-full", "placeholder": "Text result (e.g. Non-reactive, Normal)"}),
+            "laboratory": forms.Select(attrs={"class": "select select-bordered w-full"}),
+            "notes": forms.Textarea(attrs={"class": "textarea textarea-bordered w-full", "rows": 3, "placeholder": "Clinical observations / comments"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.initial.get("date_done") and not self.instance.pk:
+            self.initial["date_done"] = timezone.localdate()
 

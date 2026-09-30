@@ -59,6 +59,22 @@ class Vaccination(TimeStampedModel):
         return f"{self.vaccine_name} ({self.client.full_name})"
 
 
+class Laboratory(TimeStampedModel):
+    """Represents a medical laboratory / diagnostic facility."""
+
+    name = models.CharField(max_length=150, unique=True)
+    code = models.CharField(max_length=20, blank=True, null=True)
+    contact_number = models.CharField(max_length=20, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})" if self.code else self.name
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "Laboratories"
+
+
 class InvestigationType(TimeStampedModel):
     """Represents a type of investigation, e.g., FBC, LFT."""
 
@@ -78,8 +94,8 @@ class Investigation(TimeStampedModel):
     date_done = models.DateField()
     investigation_type = models.ForeignKey(InvestigationType, on_delete=models.SET_NULL, null=True, blank=True)
     value = models.FloatField(blank=True, null=True)
-    text_value = models.CharField(max_length=100, blank=True, null=True) # Use this text when value is not a number, eg: Reactive, Non-reactive.
-    laboratory_name = models.CharField(max_length=100, blank=True, null=True)
+    text_value = models.CharField(max_length=100, blank=True, null=True)  # Use when value is text (e.g. Reactive/Non-reactive)
+    laboratory = models.ForeignKey(Laboratory, on_delete=models.SET_NULL, null=True, blank=True, related_name="investigations")
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):

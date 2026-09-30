@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .forms import AdmissionForm, ClientForm, TransfusionForm
-from .models import Admission, Client, ClientCareUnit, District, DS_Division, Transfusion
+from .forms import AdmissionForm, ClientForm, InvestigationForm, TransfusionForm
+from .models import Admission, Client, ClientCareUnit, District, DS_Division, Investigation, Transfusion
 
 
 # -------------------------------------------------------------------
@@ -272,5 +272,74 @@ class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
         context["admission"] = self.object.admission
         context["client"] = self.object.admission.client
         context["modal_title"] = f"Edit Transfusion - {self.object.admission.client.initials_with_last_name}"
+        return context
+
+
+# -------------------------------------------------------------------
+#                     INVESTIGATION CRUD VIEWS
+# -------------------------------------------------------------------
+def client_investigations_partial_view(request, client_id):
+    """HTMX partial returning updated Investigations list card."""
+    client = get_object_or_404(Client, pk=client_id)
+    investigations = client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done")
+    return render(request, "clients/partials/investigations_list_partial.html", {"client": client, "investigations": investigations})
+
+
+class InvestigationCreateView(LoginRequiredMixin, CreateView):
+    """Log a new lab investigation for a patient."""
+
+    model = Investigation
+    form_class = InvestigationForm
+    template_name = "clients/modals/investigation_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.client_obj = get_object_or_404(Client, pk=self.kwargs["client_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.client = self.client_obj
+        investigation = form.save()
+        messages.success(self.request, f"Lab investigation logged for {self.client_obj.full_name}.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse("", status=200)
+            response["HX-Trigger"] = "reloadInvestigations"
+            return response
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.client_obj.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["client"] = self.client_obj
+        context["modal_title"] = f"Log Investigation - {self.client_obj.initials_with_last_name}"
+        return context
+
+
+class InvestigationUpdateView(LoginRequiredMixin, UpdateView):
+    """Edit an existing lab investigation record."""
+
+    model = Investigation
+    form_class = InvestigationForm
+    template_name = "clients/modals/investigation_form_modal.html"
+
+    def form_valid(self, form):
+        investigation = form.save()
+        messages.success(self.request, f"Investigation record updated for {investigation.client.full_name}.")
+
+        if self.request.headers.get("HX-Request"):
+            response = HttpResponse("", status=200)
+            response["HX-Trigger"] = "reloadInvestigations"
+            return response
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.client.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["client"] = self.object.client
+        context["modal_title"] = f"Edit Investigation - {self.object.client.initials_with_last_name}"
         return context
 

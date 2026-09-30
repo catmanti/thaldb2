@@ -19,6 +19,7 @@ from .models import (
     GrowthRecord,
     Investigation,
     InvestigationType,
+    Laboratory,
     Province,
     ThalassemiaUnit,
     Transfusion,
@@ -173,13 +174,22 @@ class InvestigationTypeAdmin(admin.ModelAdmin):
     ordering = ["name"]
 
 
+@admin.register(Laboratory)
+class LaboratoryAdmin(admin.ModelAdmin):
+    """Admin for Laboratory"""
+
+    list_display = ["name", "code", "contact_number"]
+    search_fields = ["name", "code"]
+    ordering = ["name"]
+
+
 @admin.register(Investigation)
 class InvestigationAdmin(admin.ModelAdmin):
     """Admin for Investigation"""
 
-    list_display = ["client", "investigation_type", "date_done", "value", "laboratory_name"]
-    list_filter = ["investigation_type", "date_done"]
-    search_fields = ["client__full_name", "investigation_type__name", "laboratory_name"]
+    list_display = ["client", "investigation_type", "date_done", "value", "text_value", "laboratory"]
+    list_filter = ["investigation_type", "laboratory", "date_done"]
+    search_fields = ["client__full_name", "investigation_type__name", "laboratory__name"]
     ordering = ["-date_done"]
 
 

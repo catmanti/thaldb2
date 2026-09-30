@@ -185,6 +185,9 @@
 .text-wrap {
   text-wrap: wrap;
 }
+.whitespace-nowrap {
+  white-space: nowrap;
+}
 .text-current {
   color: currentcolor;
 }

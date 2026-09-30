@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clients.models import Admission, Choice, Client, Transfusion
+from clients.models import Admission, Choice, Client, Investigation, InvestigationType, Laboratory, Transfusion
 
 User = get_user_model()
 
@@ -87,3 +87,76 @@ class AdmissionTransfusionWorkflowTests(TestCase):
         transfusion = Transfusion.objects.first()
         self.assertEqual(transfusion.admission, admission)
         self.assertEqual(float(transfusion.pre_HB_level), 8.5)
+
+
+class InvestigationWorkflowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email="doctor@hospital.lk", password="pass123")
+        self.client_obj = Client.objects.create(
+            registration_number="TH-2026-777",
+            full_name="Investigation Test Patient",
+            gender="F",
+            date_of_birth="2016-08-15",
+        )
+        self.inv_type = InvestigationType.objects.create(
+            name="Serum Ferritin",
+            unit="ng/mL",
+            reference_range="30 - 300",
+        )
+        self.laboratory = Laboratory.objects.create(
+            name="National Thalassemia Reference Lab",
+            code="NTRL",
+        )
+
+    def test_investigation_create_and_update(self):
+        self.client.force_login(self.user)
+
+        # 1. Create Investigation via HTMX POST
+        create_url = reverse("clients:investigation-create", kwargs={"client_id": self.client_obj.pk})
+        resp = self.client.post(
+            create_url,
+            {
+                "investigation_type": self.inv_type.pk,
+                "date_done": timezone.localdate(),
+                "value": "2450.50",
+                "laboratory": self.laboratory.pk,
+                "notes": "High serum ferritin level observed",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get("HX-Trigger"), "reloadInvestigations")
+        self.assertEqual(Investigation.objects.count(), 1)
+
+        inv = Investigation.objects.first()
+        self.assertEqual(inv.client, self.client_obj)
+        self.assertEqual(inv.investigation_type, self.inv_type)
+        self.assertEqual(inv.value, 2450.50)
+        self.assertEqual(inv.laboratory, self.laboratory)
+
+        # 2. Update Investigation via HTMX POST
+        update_url = reverse("clients:investigation-update", kwargs={"pk": inv.pk})
+        resp_update = self.client.post(
+            update_url,
+            {
+                "investigation_type": self.inv_type.pk,
+                "date_done": timezone.localdate(),
+                "value": "2100.00",
+                "laboratory": self.laboratory.pk,
+                "notes": "Re-evaluated after chelation dosage increase",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(resp_update.status_code, 200)
+        self.assertEqual(resp_update.headers.get("HX-Trigger"), "reloadInvestigations")
+
+        inv.refresh_from_db()
+        self.assertEqual(inv.value, 2100.00)
+        self.assertEqual(inv.notes, "Re-evaluated after chelation dosage increase")
+
+        # 3. Test Partial View Rendering
+        partial_url = reverse("clients:investigations-partial", kwargs={"client_id": self.client_obj.pk})
+        resp_partial = self.client.get(partial_url)
+        self.assertEqual(resp_partial.status_code, 200)
+        self.assertContains(resp_partial, "Serum Ferritin")
+        self.assertContains(resp_partial, "National Thalassemia Reference Lab")
