@@ -75,6 +75,9 @@
 .w-full {
   width: 100%;
 }
+.max-w-\[120px\] {
+  max-width: 120px;
+}
 .min-w-\[140px\] {
   min-width: 140px;
 }
@@ -181,6 +184,9 @@
 }
 .text-right {
   text-align: right;
+}
+.text-\[10px\] {
+  font-size: 10px;
 }
 .text-wrap {
   text-wrap: wrap;

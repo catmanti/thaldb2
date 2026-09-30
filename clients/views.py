@@ -93,7 +93,17 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         context["care_units"] = client.care_links.select_related("unit").all()
         context["admissions"] = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
         context["clinic_visits"] = client.clinic_visits.select_related("clinic_type").order_by("-date_visit")
-        context["investigations"] = client.client_investigations.select_related("investigation_type").order_by("-date_done")
+
+        all_investigations = list(client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id"))
+        context["investigations"] = all_investigations
+
+        # Extract latest result per investigation type for quick sidebar display
+        latest_inv_map = {}
+        for inv in all_investigations:
+            if inv.investigation_type and inv.investigation_type_id not in latest_inv_map:
+                latest_inv_map[inv.investigation_type_id] = inv
+        context["latest_investigations"] = list(latest_inv_map.values())
+
         context["growth_records"] = client.growth_records.select_related("type").order_by("-date_measured")
         context["vaccinations"] = client.vaccinations.select_related("vaccine_name").order_by("-date_given")
         context["complications"] = client.client_complications.select_related("complication", "status").order_by("-detected_date")

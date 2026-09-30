@@ -1,15 +1,13 @@
-<div id="investigations-card" class="card bg-base-100 shadow border border-base-300" hx-get="{% url 'clients:investigations-partial' client.pk %}" hx-trigger="reloadInvestigations from:body" hx-swap="outerHTML">
+<div id="investigations-card" class="card bg-base-100 shadow border border-base-300" hx-get="{% url 'clients:investigations-partial' client.pk %}"
+    hx-trigger="reloadInvestigations from:body" hx-swap="outerHTML">
     <div class="card-body p-5">
         <div class="flex items-center justify-between border-b border-base-200 pb-2">
             <h3 class="font-bold text-sm uppercase tracking-wider text-primary flex items-center gap-2">
                 <span>🧪 Lab Investigations</span>
                 <span class="badge badge-primary badge-sm">{{ investigations|length }}</span>
             </h3>
-            <button type="button" 
-                    hx-get="{% url 'clients:investigation-create' client.pk %}" 
-                    hx-target="#modal-container" 
-                    hx-swap="innerHTML" 
-                    class="btn btn-primary btn-xs gap-1">
+            <button type="button" hx-get="{% url 'clients:investigation-create' client.pk %}" hx-target="#modal-container" hx-swap="innerHTML"
+                class="btn btn-primary btn-xs gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -47,17 +45,14 @@
                         <td class="text-base-content/70">{{ inv.investigation_type.reference_range|default:"--" }}</td>
                         <td>
                             {% if inv.laboratory %}
-                            <span class="badge badge-outline badge-xs" title="{{ inv.laboratory.name }}">{{ inv.laboratory.name }}</span>
+                            <span class="badge badge-outline badge-xs" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code }}</span>
                             {% else %}
                             <span class="text-base-content/50">--</span>
                             {% endif %}
                         </td>
                         <td class="text-right">
-                            <button type="button" 
-                                    hx-get="{% url 'clients:investigation-update' inv.pk %}" 
-                                    hx-target="#modal-container" 
-                                    hx-swap="innerHTML" 
-                                    class="btn btn-ghost btn-xs text-info px-1 py-0 h-auto font-normal">
+                            <button type="button" hx-get="{% url 'clients:investigation-update' inv.pk %}" hx-target="#modal-container" hx-swap="innerHTML"
+                                class="btn btn-ghost btn-xs text-info px-1 py-0 h-auto font-normal">
                                 Edit
                             </button>
                         </td>

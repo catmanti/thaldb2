@@ -160,3 +160,32 @@ class InvestigationWorkflowTests(TestCase):
         self.assertEqual(resp_partial.status_code, 200)
         self.assertContains(resp_partial, "Serum Ferritin")
         self.assertContains(resp_partial, "National Thalassemia Reference Lab")
+
+    def test_latest_investigations_in_client_detail_context(self):
+        self.client.force_login(self.user)
+
+        # Create two tests for the same investigation type on different dates
+        Investigation.objects.create(
+            client=self.client_obj,
+            investigation_type=self.inv_type,
+            date_done="2026-01-01",
+            value=3200.0,
+            laboratory=self.laboratory,
+        )
+        inv_new = Investigation.objects.create(
+            client=self.client_obj,
+            investigation_type=self.inv_type,
+            date_done="2026-03-01",
+            value=2100.0,
+            laboratory=self.laboratory,
+        )
+
+        detail_url = reverse("clients:client-detail", kwargs={"pk": self.client_obj.pk})
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("latest_investigations", response.context)
+        latest_list = response.context["latest_investigations"]
+        self.assertEqual(len(latest_list), 1)
+        self.assertEqual(latest_list[0].pk, inv_new.pk)
+        self.assertEqual(latest_list[0].value, 2100.0)

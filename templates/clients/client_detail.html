@@ -73,23 +73,43 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Sidebar Info Card -->
         <div class="space-y-4">
+            <!-- Latest Investigations Summary Card -->
             <div class="card bg-base-100 shadow border border-base-300">
                 <div class="card-body p-5 space-y-3 text-sm">
-                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2">Location & Guardian Info</h3>
-                    <div>
-                        <span class="text-xs text-base-content/60 uppercase block">DS Division / District</span>
-                        <p class="font-semibold">{{ client.ds_division.name|default:"N/A" }}
-                            {% if client.ds_division %}({{ client.ds_division.district.name }}){% endif %}</p>
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>🧪 Latest Lab Results</span>
+                        <span class="badge badge-primary badge-xs font-mono font-semibold">{{ latest_investigations|length }}</span>
+                    </h3>
+
+                    {% if latest_investigations %}
+                    <div class="space-y-2.5">
+                        {% for inv in latest_investigations %}
+                        <div class="p-2.5 rounded-lg bg-base-200/50 border border-base-300/70 space-y-1">
+                            <div class="flex items-center justify-between gap-1 text-xs">
+                                <span class="font-bold text-base-content">{{ inv.investigation_type.name }}</span>
+                                <span class="text-[10px] text-base-content/60 font-mono">{{ inv.date_done }}</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    {% if inv.value is not None %}
+                                    <span class="font-mono font-extrabold text-primary text-sm">{{ inv.value }}</span>
+                                    <span class="text-xs text-base-content/70 ml-0.5">{{ inv.investigation_type.unit|default:"" }}</span>
+                                    {% elif inv.text_value %}
+                                    <span class="badge badge-ghost badge-sm font-semibold text-xs">{{ inv.text_value }}</span>
+                                    {% else %}
+                                    <span class="text-xs text-base-content/50">--</span>
+                                    {% endif %}
+                                </div>
+                                {% if inv.laboratory %}
+                                <span class="badge badge-outline badge-xs text-[10px] truncate max-w-[120px]" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Address</span>
-                        <p class="font-medium">{{ client.address|default:"N/A" }}</p>
-                    </div>
-                    <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Primary Guardian</span>
-                        <p class="font-semibold">{{ client.guardian_name_1|default:"N/A" }}</p>
-                        <p class="text-xs text-base-content/70">{{ client.guardian_contact_number_1|default:"" }}</p>
-                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/60 italic py-3 text-center">No lab test results recorded yet.</p>
+                    {% endif %}
                 </div>
             </div>
 
