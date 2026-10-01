@@ -9,10 +9,16 @@ module.exports = {
     "users/**/*.py",
     "static/js/**/*.js",
   ],
-  darkMode: "class",
-  theme: {
-    extend: {},
-  },
+  safelist: [
+    "badge-error",
+    "badge-warning",
+    "badge-success",
+    "badge-info",
+    "alert-error",
+    "alert-warning",
+    "alert-success",
+    "alert-info",
+  ],
   plugins: [require("daisyui")],
   daisyui: {
     themes: [

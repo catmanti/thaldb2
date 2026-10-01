@@ -168,8 +168,8 @@ class VaccinationAdmin(admin.ModelAdmin):
 class InvestigationTypeAdmin(admin.ModelAdmin):
     """Admin for InvestigationType"""
 
-    list_display = ["name", "unit", "reference_range"]
-    list_filter = ["unit"]
+    list_display = ["name", "unit", "reference_range", "recommended_interval_months"]
+    list_filter = ["unit", "recommended_interval_months"]
     search_fields = ["name", "unit", "reference_range"]
     ordering = ["name"]
 

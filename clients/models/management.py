@@ -82,8 +82,15 @@ class InvestigationType(TimeStampedModel):
     description = models.TextField(blank=True, null=True)
     unit = models.CharField(max_length=50, blank=True, null=True)
     reference_range = models.CharField(max_length=100, blank=True, null=True)
+    recommended_interval_months = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Recommended test frequency in months (e.g. 1 = Monthly, 3 = Quarterly, 12 = Yearly)",
+    )
 
     def __str__(self):
+        if self.recommended_interval_months:
+            return f"{self.name} (Every {self.recommended_interval_months}m)"
         return self.name
 
 
@@ -100,6 +107,75 @@ class Investigation(TimeStampedModel):
 
     def __str__(self):
         return f"{self.investigation_type} - {self.client.full_name}"
+
+    @property
+    def next_due_date(self):
+        """Calculates next due date based on date_done and recommended_interval_months."""
+        if not self.investigation_type or not self.investigation_type.recommended_interval_months or not self.date_done:
+            return None
+
+        import datetime
+
+        d = self.date_done
+        if isinstance(d, str):
+            try:
+                d = datetime.date.fromisoformat(d)
+            except ValueError:
+                return None
+
+        months = self.investigation_type.recommended_interval_months
+        month = d.month - 1 + months
+        year = d.year + month // 12
+        month = month % 12 + 1
+        day = min(
+            d.day,
+            [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1],
+        )
+        return datetime.date(year, month, day)
+
+    @property
+    def surveillance_status(self):
+        """Returns dict with status, label, badge_class, and overdue_days."""
+        due = self.next_due_date
+        if not due:
+            return None
+
+        from django.utils import timezone
+
+        today = timezone.localdate()
+        days_diff = (due - today).days
+
+        if days_diff < 0:
+            overdue_days = abs(days_diff)
+            return {
+                "status": "overdue",
+                "label": f"Overdue by {overdue_days}d",
+                "short_label": f"Overdue ({overdue_days}d)",
+                "badge_class": "badge-error",
+                "days_diff": days_diff,
+                "due_date": due,
+                "is_overdue": True,
+            }
+        elif days_diff <= 30:
+            return {
+                "status": "due_soon",
+                "label": f"Due in {days_diff}d",
+                "short_label": f"Due ({days_diff}d)",
+                "badge_class": "badge-warning",
+                "days_diff": days_diff,
+                "due_date": due,
+                "is_due_soon": True,
+            }
+        else:
+            return {
+                "status": "up_to_date",
+                "label": "Up to date",
+                "short_label": "Up to date",
+                "badge_class": "badge-success badge-outline",
+                "days_diff": days_diff,
+                "due_date": due,
+                "is_up_to_date": True,
+            }
 
 
 class GrowthRecord(TimeStampedModel):

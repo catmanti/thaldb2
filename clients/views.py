@@ -115,12 +115,28 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         context["next_investigations_limit"] = 10
         context["current_investigations_limit"] = 5
 
-        # Extract latest result per investigation type for quick sidebar display
+        # Extract latest result per investigation type for quick sidebar display & surveillance status
         latest_inv_map = {}
         for inv in all_investigations:
             if inv.investigation_type and inv.investigation_type_id not in latest_inv_map:
                 latest_inv_map[inv.investigation_type_id] = inv
-        context["latest_investigations"] = list(latest_inv_map.values())
+        
+        latest_list = list(latest_inv_map.values())
+        context["latest_investigations"] = latest_list
+
+        # Extract overdue and due soon periodic surveillance alerts
+        overdue_investigations = []
+        due_soon_investigations = []
+        for inv in latest_list:
+            status_info = inv.surveillance_status
+            if status_info:
+                if status_info.get("is_overdue"):
+                    overdue_investigations.append(inv)
+                elif status_info.get("is_due_soon"):
+                    due_soon_investigations.append(inv)
+
+        context["overdue_investigations"] = overdue_investigations
+        context["due_soon_investigations"] = due_soon_investigations
 
         context["growth_records"] = client.growth_records.select_related("type").order_by("-date_measured")
         context["vaccinations"] = client.vaccinations.select_related("vaccine_name").order_by("-date_given")

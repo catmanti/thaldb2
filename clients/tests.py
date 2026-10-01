@@ -189,3 +189,31 @@ class InvestigationWorkflowTests(TestCase):
         self.assertEqual(len(latest_list), 1)
         self.assertEqual(latest_list[0].pk, inv_new.pk)
         self.assertEqual(latest_list[0].value, 2100.0)
+
+    def test_periodic_investigation_surveillance_alerts(self):
+        self.client.force_login(self.user)
+
+        # Set recommended interval to 3 months for Ferritin
+        self.inv_type.recommended_interval_months = 3
+        self.inv_type.save()
+
+        # Create an old test done 6 months ago (so it is overdue)
+        six_months_ago = (timezone.localdate() - timezone.timedelta(days=180)).strftime("%Y-%m-%d")
+        inv_overdue = Investigation.objects.create(
+            client=self.client_obj,
+            investigation_type=self.inv_type,
+            date_done=six_months_ago,
+            value=3500.0,
+            laboratory=self.laboratory,
+        )
+
+        detail_url = reverse("clients:client-detail", kwargs={"pk": self.client_obj.pk})
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("overdue_investigations", response.context)
+        overdue_list = response.context["overdue_investigations"]
+        self.assertEqual(len(overdue_list), 1)
+        self.assertEqual(overdue_list[0].pk, inv_overdue.pk)
+        self.assertTrue(inv_overdue.surveillance_status["is_overdue"])
+        self.assertContains(response, "Periodic Surveillance Tests Overdue")

@@ -69,6 +69,53 @@
         </div>
     </div>
 
+    <!-- Periodic Surveillance Overdue / Due Soon Alert Banner -->
+    {% if overdue_investigations or due_soon_investigations %}
+    <div class="space-y-2">
+        {% if overdue_investigations %}
+        <div x-data="{ show: true }" x-show="show" class="alert alert-error shadow-lg flex items-center justify-between py-3">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div class="text-xs">
+                    <span class="font-bold text-sm block text-white">🚨 Periodic Surveillance Tests Overdue:</span>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        {% for inv in overdue_investigations %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white text-red-700 text-xs font-extrabold shadow-sm">
+                            {{ inv.investigation_type.name }} — {{ inv.surveillance_status.label }} (Last: {{ inv.date_done }})
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <button type="button" @click="show = false" class="btn btn-ghost btn-circle btn-xs text-white opacity-80 hover:opacity-100 shrink-0" title="Close warning">✕</button>
+        </div>
+        {% endif %}
+
+        {% if due_soon_investigations %}
+        <div x-data="{ show: true }" x-show="show" class="alert alert-warning shadow-md flex items-center justify-between py-2.5">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5 text-amber-950" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="text-xs">
+                    <span class="font-bold block text-amber-950">⏰ Upcoming Surveillance Tests Due Soon:</span>
+                    <div class="flex flex-wrap gap-2 mt-0.5">
+                        {% for inv in due_soon_investigations %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white text-amber-900 text-xs font-extrabold shadow-sm">
+                            {{ inv.investigation_type.name }} — {{ inv.surveillance_status.label }} (Last: {{ inv.date_done }})
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <button type="button" @click="show = false" class="btn btn-ghost btn-circle btn-xs text-amber-950 opacity-80 hover:opacity-100 shrink-0" title="Close warning">✕</button>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <!-- Clinical Details Grid & History Tabs -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Sidebar Info Card -->
@@ -101,9 +148,26 @@
                                     {% endif %}
                                 </div>
                                 {% if inv.laboratory %}
-                                <span class="badge badge-outline badge-xs text-[10px] truncate max-w-[120px]" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code }}</span>
+                                <span class="badge badge-outline badge-xs text-[10px] truncate max-w-[120px]" title="{{ inv.laboratory.name }}">{{ inv.laboratory.code|default:inv.laboratory.name }}</span>
                                 {% endif %}
                             </div>
+                            {% if inv.surveillance_status %}
+                            <div class="pt-1 flex items-center justify-between">
+                                {% if inv.surveillance_status.status == 'overdue' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-600 text-white shadow-xs">
+                                    {{ inv.surveillance_status.label }}
+                                </span>
+                                {% elif inv.surveillance_status.status == 'due_soon' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-black shadow-xs">
+                                    {{ inv.surveillance_status.label }}
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-600 text-white shadow-xs">
+                                    {{ inv.surveillance_status.label }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
