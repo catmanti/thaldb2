@@ -77,6 +77,18 @@ class UserModelTests(TestCase):
         self.assertTrue(doctor.is_doctor)
         self.assertFalse(nurse.is_doctor)
 
+    def test_is_nurse_property(self):
+        nurse = User.objects.create_user(email="nurse@hospital.lk", password="pass", role=User.Role.NURSE)
+        doctor = User.objects.create_user(email="doc@hospital.lk", password="pass", role=User.Role.DOCTOR)
+        self.assertTrue(nurse.is_nurse)
+        self.assertFalse(doctor.is_nurse)
+
+    def test_is_data_entry_property(self):
+        de = User.objects.create_user(email="de@hospital.lk", password="pass", role=User.Role.DATA_ENTRY)
+        nurse = User.objects.create_user(email="nurse@hospital.lk", password="pass", role=User.Role.NURSE)
+        self.assertTrue(de.is_data_entry)
+        self.assertFalse(nurse.is_data_entry)
+
     def test_is_unit_admin_property(self):
         unit_admin = User.objects.create_user(
             email="uadmin@hospital.lk", password="pass", role=User.Role.UNIT_ADMIN
@@ -89,6 +101,37 @@ class UserModelTests(TestCase):
         self.assertTrue(unit_admin.is_unit_admin)
         self.assertTrue(sys_admin.is_unit_admin)
         self.assertFalse(nurse.is_unit_admin)
+
+    def test_is_system_admin_property(self):
+        sys_admin = User.objects.create_user(email="sadmin@hospital.lk", password="pass", role=User.Role.SYSTEM_ADMIN)
+        super_user = User.objects.create_superuser(email="super@hospital.lk", password="pass")
+        nurse = User.objects.create_user(email="nurse@hospital.lk", password="pass", role=User.Role.NURSE)
+
+        self.assertTrue(sys_admin.is_system_admin)
+        self.assertTrue(super_user.is_system_admin)
+        self.assertFalse(nurse.is_system_admin)
+
+    def test_is_clinical_staff_property(self):
+        doctor = User.objects.create_user(email="doc@hospital.lk", password="pass", role=User.Role.DOCTOR)
+        nurse = User.objects.create_user(email="nurse@hospital.lk", password="pass", role=User.Role.NURSE)
+        unit_admin = User.objects.create_user(email="uadmin@hospital.lk", password="pass", role=User.Role.UNIT_ADMIN)
+        sys_admin = User.objects.create_user(email="sadmin@hospital.lk", password="pass", role=User.Role.SYSTEM_ADMIN)
+        data_entry = User.objects.create_user(email="de@hospital.lk", password="pass", role=User.Role.DATA_ENTRY)
+
+        self.assertTrue(doctor.is_clinical_staff)
+        self.assertTrue(nurse.is_clinical_staff)
+        self.assertTrue(unit_admin.is_clinical_staff)
+        self.assertTrue(sys_admin.is_clinical_staff)
+        self.assertFalse(data_entry.is_clinical_staff)
+
+    def test_can_prescribe_property(self):
+        doctor = User.objects.create_user(email="doc@hospital.lk", password="pass", role=User.Role.DOCTOR)
+        sys_admin = User.objects.create_user(email="sadmin@hospital.lk", password="pass", role=User.Role.SYSTEM_ADMIN)
+        nurse = User.objects.create_user(email="nurse@hospital.lk", password="pass", role=User.Role.NURSE)
+
+        self.assertTrue(doctor.can_prescribe)
+        self.assertTrue(sys_admin.can_prescribe)
+        self.assertFalse(nurse.can_prescribe)
 
     def test_user_primary_unit_association(self):
         unit = ThalassemiaUnit.objects.create(name="Colombo North Hospital Unit")
@@ -270,3 +313,59 @@ class UpdatePreferencesViewTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.color_scheme, "light")
         self.assertFalse(self.user.dark_mode)
+
+
+class PermissionsModuleTests(TestCase):
+    """Tests for users/permissions.py mixins and helpers."""
+
+    def setUp(self):
+        self.doctor = User.objects.create_user(email="doc_perm@hospital.lk", password="pass", role=User.Role.DOCTOR)
+        self.nurse = User.objects.create_user(email="nurse_perm@hospital.lk", password="pass", role=User.Role.NURSE)
+        self.data_entry = User.objects.create_user(email="de_perm@hospital.lk", password="pass", role=User.Role.DATA_ENTRY)
+        self.unit_admin = User.objects.create_user(email="uadmin_perm@hospital.lk", password="pass", role=User.Role.UNIT_ADMIN)
+
+        self.client_obj = Client.objects.create(
+            registration_number="TH-PERM-001",
+            full_name="Permission Test Patient",
+            gender="F",
+            date_of_birth="2015-05-05",
+        )
+        self.admission = Admission.objects.create(
+            client=self.client_obj,
+            date_of_admission="2026-01-01",
+        )
+
+    def test_can_user_edit_entry_for_elevated_roles(self):
+        from users.permissions import can_user_edit_entry
+        self.assertTrue(can_user_edit_entry(self.doctor, self.admission))
+        self.assertTrue(can_user_edit_entry(self.unit_admin, self.admission))
+
+    def test_can_user_edit_entry_time_window_recent(self):
+        from users.permissions import can_user_edit_entry
+        from django.utils import timezone
+
+        # Entry created right now
+        self.admission.created_at = timezone.now()
+        self.admission.save()
+
+        self.assertTrue(can_user_edit_entry(self.data_entry, self.admission, window_hours=48))
+        self.assertTrue(can_user_edit_entry(self.nurse, self.admission, window_hours=48))
+
+    def test_can_user_edit_entry_time_window_expired(self):
+        from users.permissions import can_user_edit_entry
+        from django.utils import timezone
+        import datetime
+
+        # Entry created 72 hours ago
+        old_time = timezone.now() - datetime.timedelta(hours=72)
+        Admission.objects.filter(pk=self.admission.pk).update(created_at=old_time)
+        self.admission.refresh_from_db()
+
+        # Data Entry & Nurse cannot edit expired entry
+        self.assertFalse(can_user_edit_entry(self.data_entry, self.admission, window_hours=48))
+        self.assertFalse(can_user_edit_entry(self.nurse, self.admission, window_hours=48))
+
+        # Doctor & Unit Admin can still edit expired entry
+        self.assertTrue(can_user_edit_entry(self.doctor, self.admission, window_hours=48))
+        self.assertTrue(can_user_edit_entry(self.unit_admin, self.admission, window_hours=48))
+

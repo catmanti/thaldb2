@@ -53,5 +53,28 @@ class User(AbstractUser):
         return self.role == self.Role.DOCTOR
 
     @property
+    def is_nurse(self):
+        return self.role == self.Role.NURSE
+
+    @property
+    def is_data_entry(self):
+        return self.role == self.Role.DATA_ENTRY
+
+    @property
     def is_unit_admin(self):
         return self.role in (self.Role.UNIT_ADMIN, self.Role.SYSTEM_ADMIN)
+
+    @property
+    def is_system_admin(self):
+        return self.role == self.Role.SYSTEM_ADMIN or self.is_superuser
+
+    @property
+    def is_clinical_staff(self):
+        """Returns True if user is direct clinical care staff (Doctor, Nurse, or Unit/System Admin)."""
+        return self.role in (self.Role.DOCTOR, self.Role.NURSE, self.Role.UNIT_ADMIN, self.Role.SYSTEM_ADMIN) or self.is_superuser
+
+    @property
+    def can_prescribe(self):
+        """Returns True if user has authorization to prescribe chelation therapy or define surveillance plans."""
+        return self.role in (self.Role.DOCTOR, self.Role.SYSTEM_ADMIN) or self.is_superuser
+
