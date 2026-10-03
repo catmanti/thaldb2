@@ -115,6 +115,12 @@ class DiagnosisTypeAdmin(admin.ModelAdmin):
     ordering = ["name"]
 
 
+class ClientCareUnitInline(admin.TabularInline):
+    model = ClientCareUnit
+    extra = 1
+    fields = ["unit", "role", "start_date", "end_date", "is_active", "notes"]
+
+
 @admin.register(ClientCareUnit)
 class ClientCareUnitAdmin(admin.ModelAdmin):
     """Admin for ClientCareUnit"""
@@ -129,10 +135,16 @@ class ClientCareUnitAdmin(admin.ModelAdmin):
 class ClientAdmin(admin.ModelAdmin):
     """Admin for Client"""
 
-    list_display = ["registration_number", "full_name", "date_of_birth", "gender", "contact_number", "diagnosis"]
-    list_filter = ["gender", "blood_group", "diagnosis", "ethnicity"]
+    list_display = ["registration_number", "full_name", "get_primary_unit", "date_of_birth", "gender", "contact_number", "diagnosis"]
+    list_filter = ["gender", "blood_group", "diagnosis", "ethnicity", "care_units"]
     search_fields = ["registration_number", "full_name", "contact_number", "nic_number"]
     ordering = ["full_name"]
+    inlines = [ClientCareUnitInline]
+
+    @admin.display(description="Primary Unit")
+    def get_primary_unit(self, obj):
+        return obj.primary_care_unit or "-"
+
 
 
 @admin.register(ComplicationType)

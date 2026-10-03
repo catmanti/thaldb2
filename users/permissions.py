@@ -78,7 +78,56 @@ class UnitScopedQuerySetMixin:
             elif hasattr(qs.model, "admission"):
                 return qs.filter(admission__client__care_links__unit=user.primary_unit, admission__client__care_links__is_active=True).distinct()
 
-        return qs
+        return qs.none()
+
+
+class UnitScopedClientPermissionMixin(UserPassesTestMixin):
+    """
+    Enforces strict unit-level permission isolation on Client views:
+    - System Admins can view/edit clients across all units.
+    - Other users can only view/edit clients linked to their primary_unit.
+    """
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = getattr(self.request, "user", None)
+
+        if not user or not user.is_authenticated:
+            return qs.none()
+
+        if user.is_system_admin or user.is_superuser:
+            return qs
+
+        if user.primary_unit:
+            return qs.filter(care_links__unit=user.primary_unit, care_links__is_active=True).distinct()
+
+        return qs.none()
+
+    def test_func(self) -> bool:
+        user = getattr(self.request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
+
+        if user.is_system_admin or user.is_superuser:
+            return True
+
+        if not user.primary_unit:
+            return False
+
+        # For single object views (DetailView, UpdateView), check object-level access
+        if hasattr(self, "get_object"):
+            try:
+                client = self.get_object()
+                return client.care_links.filter(unit=user.primary_unit, is_active=True).exists()
+            except Exception:
+                pass
+
+        return True
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied("You do not have permission to access clients outside your assigned primary unit.")
+        return super().handle_no_permission()
+
 
 
 def can_user_edit_entry(user: User, entry, window_hours: int = 48) -> bool:

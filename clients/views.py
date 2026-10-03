@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -33,11 +34,14 @@ def load_ds_divisions_view(request):
     return HttpResponse("".join(options))
 
 
+from users.permissions import UnitScopedClientPermissionMixin
+
+
 # -------------------------------------------------------------------
 #                       CLIENT CRUD VIEWS
 # -------------------------------------------------------------------
-class ClientListView(LoginRequiredMixin, ListView):
-    """Searchable & Filterable Client Directory."""
+class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListView):
+    """Searchable & Filterable Client Directory (Scoped to User's Primary Unit)."""
 
     model = Client
     template_name = "clients/client_list.html"
@@ -78,8 +82,8 @@ class ClientListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ClientDetailView(LoginRequiredMixin, DetailView):
-    """Comprehensive Patient Profile View."""
+class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, DetailView):
+    """Comprehensive Patient Profile View (Scoped to User's Primary Unit)."""
 
     model = Client
     template_name = "clients/client_detail.html"
@@ -147,8 +151,8 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class ClientCreateView(LoginRequiredMixin, CreateView):
-    """Client Registration View."""
+class ClientCreateView(LoginRequiredMixin, UnitScopedClientPermissionMixin, CreateView):
+    """Client Registration View (Auto-assigns user's Primary Care Unit)."""
 
     model = Client
     form_class = ClientForm
@@ -161,7 +165,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         # Auto-assign logged-in user's primary unit if set
         user_unit = getattr(self.request.user, "primary_unit", None)
         if user_unit:
-            ClientCareUnit.objects.create(
+            ClientCareUnit.objects.get_or_create(
                 client=client,
                 unit=user_unit,
                 role=ClientCareUnit.Role.PRIMARY,
@@ -177,8 +181,8 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class ClientUpdateView(LoginRequiredMixin, UpdateView):
-    """Client Profile Update View."""
+class ClientUpdateView(LoginRequiredMixin, UnitScopedClientPermissionMixin, UpdateView):
+    """Client Profile Update View (Scoped to User's Primary Unit)."""
 
     model = Client
     form_class = ClientForm
@@ -200,7 +204,12 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
 # -------------------------------------------------------------------
 def client_admissions_partial_view(request, client_id):
     """HTMX partial returning updated Admissions & Transfusions card with limit/pagination support."""
+    if not request.user.is_authenticated:
+        raise PermissionDenied()
     client = get_object_or_404(Client, pk=client_id)
+    if not request.user.is_system_admin:
+        if not request.user.primary_unit or not client.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
+            raise PermissionDenied("You do not have permission to access clients outside your primary unit.")
     total_admissions_count = client.client_admissions.count()
     limit_param = request.GET.get("limit", "5")
 
@@ -351,7 +360,12 @@ class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
 # -------------------------------------------------------------------
 def client_investigations_partial_view(request, client_id):
     """HTMX partial returning updated Investigations list card with limit/pagination support."""
+    if not request.user.is_authenticated:
+        raise PermissionDenied()
     client = get_object_or_404(Client, pk=client_id)
+    if not request.user.is_system_admin:
+        if not request.user.primary_unit or not client.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
+            raise PermissionDenied("You do not have permission to access clients outside your primary unit.")
     qs = client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id")
     total_investigations_count = qs.count()
     limit_param = request.GET.get("limit", "5")

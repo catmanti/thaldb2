@@ -91,13 +91,18 @@ class AdmissionTransfusionWorkflowTests(TestCase):
 
 class InvestigationWorkflowTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="doctor@hospital.lk", password="pass123")
+        from clients.models import ClientCareUnit, ThalassemiaUnit
+
+        self.unit = ThalassemiaUnit.objects.create(name="Reference Unit")
+        self.user = User.objects.create_user(email="doctor@hospital.lk", password="pass123", primary_unit=self.unit)
         self.client_obj = Client.objects.create(
             registration_number="TH-2026-777",
             full_name="Investigation Test Patient",
             gender="F",
             date_of_birth="2016-08-15",
         )
+        ClientCareUnit.objects.create(client=self.client_obj, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
         self.inv_type = InvestigationType.objects.create(
             name="Serum Ferritin",
             unit="ng/mL",
@@ -217,3 +222,106 @@ class InvestigationWorkflowTests(TestCase):
         self.assertEqual(overdue_list[0].pk, inv_overdue.pk)
         self.assertTrue(inv_overdue.surveillance_status["is_overdue"])
         self.assertContains(response, "Periodic Surveillance Tests Overdue")
+
+
+class UnitScopedClientPermissionsTests(TestCase):
+    """Tests for unit-scoped authorization rules on Client views."""
+
+    def setUp(self):
+        from clients.models import ClientCareUnit, ThalassemiaUnit
+
+        self.unit_a = ThalassemiaUnit.objects.create(name="Ragama Thalassemia Unit")
+        self.unit_b = ThalassemiaUnit.objects.create(name="Kurunegala Thalassemia Center")
+
+        self.nurse_a = User.objects.create_user(
+            email="nurse_a@ragama.lk", password="pass", role=User.Role.NURSE, primary_unit=self.unit_a
+        )
+        self.nurse_b = User.objects.create_user(
+            email="nurse_b@kurunegala.lk", password="pass", role=User.Role.NURSE, primary_unit=self.unit_b
+        )
+        self.sys_admin = User.objects.create_user(
+            email="admin@health.lk", password="pass", role=User.Role.SYSTEM_ADMIN
+        )
+
+        self.client_a = Client.objects.create(
+            registration_number="TH-RAG-001",
+            full_name="Ragama Patient",
+            gender="M",
+            date_of_birth="2012-01-01",
+        )
+        ClientCareUnit.objects.create(
+            client=self.client_a, unit=self.unit_a, role=ClientCareUnit.Role.PRIMARY, is_active=True
+        )
+
+        self.client_b = Client.objects.create(
+            registration_number="TH-KUR-001",
+            full_name="Kurunegala Patient",
+            gender="F",
+            date_of_birth="2014-06-01",
+        )
+        ClientCareUnit.objects.create(
+            client=self.client_b, unit=self.unit_b, role=ClientCareUnit.Role.PRIMARY, is_active=True
+        )
+
+    def test_unit_staff_directory_list_filtering(self):
+        # Nurse A should only see Ragama patient
+        self.client.force_login(self.nurse_a)
+        response = self.client.get(reverse("clients:client-list"))
+        self.assertEqual(response.status_code, 200)
+        client_list = response.context["clients"]
+        self.assertIn(self.client_a, client_list)
+        self.assertNotIn(self.client_b, client_list)
+
+    def test_unit_staff_cross_unit_access_forbidden(self):
+        # Nurse A attempting to access Nurse B's patient receives 403 or 404 (Access Blocked)
+        self.client.force_login(self.nurse_a)
+        
+        detail_url_b = reverse("clients:client-detail", kwargs={"pk": self.client_b.pk})
+        response_b = self.client.get(detail_url_b)
+        self.assertIn(response_b.status_code, [403, 404])
+
+        edit_url_b = reverse("clients:client-update", kwargs={"pk": self.client_b.pk})
+        response_edit_b = self.client.get(edit_url_b)
+        self.assertIn(response_edit_b.status_code, [403, 404])
+
+        # Nurse A accessing own patient receives 200 OK
+        detail_url_a = reverse("clients:client-detail", kwargs={"pk": self.client_a.pk})
+        response_a = self.client.get(detail_url_a)
+        self.assertEqual(response_a.status_code, 200)
+
+    def test_client_registration_auto_assigns_user_primary_unit(self):
+        from clients.models import ClientCareUnit
+
+        self.client.force_login(self.nurse_a)
+        create_url = reverse("clients:client-create")
+        response = self.client.post(
+            create_url,
+            {
+                "registration_number": "TH-RAG-002",
+                "full_name": "New Ragama Child",
+                "gender": "M",
+                "date_of_birth": "2020-03-15",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        new_client = Client.objects.get(registration_number="TH-RAG-002")
+        self.assertEqual(new_client.primary_care_unit, self.unit_a)
+
+    def test_system_admin_unrestricted_access(self):
+        self.client.force_login(self.sys_admin)
+
+        # System admin sees all clients in directory
+        response = self.client.get(reverse("clients:client-list"))
+        self.assertEqual(response.status_code, 200)
+        client_list = response.context["clients"]
+        self.assertIn(self.client_a, client_list)
+        self.assertIn(self.client_b, client_list)
+
+        # System admin can access detail & edit pages for any unit's patient
+        response_a = self.client.get(reverse("clients:client-detail", kwargs={"pk": self.client_a.pk}))
+        response_b = self.client.get(reverse("clients:client-detail", kwargs={"pk": self.client_b.pk}))
+        self.assertEqual(response_a.status_code, 200)
+        self.assertEqual(response_b.status_code, 200)
+
