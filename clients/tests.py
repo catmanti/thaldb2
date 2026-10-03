@@ -34,13 +34,18 @@ class ClientPhotoOptimizationTests(TestCase):
 
 class AdmissionTransfusionWorkflowTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="doctor@hospital.lk", password="pass123")
+        from clients.models import ClientCareUnit, ThalassemiaUnit
+
+        self.unit = ThalassemiaUnit.objects.create(name="Admission Unit")
+        self.user = User.objects.create_user(email="doctor@hospital.lk", password="pass123", primary_unit=self.unit)
         self.client_obj = Client.objects.create(
             registration_number="TH-2026-999",
             full_name="Test Thalassemia Patient",
             gender="M",
             date_of_birth="2015-05-10",
         )
+        ClientCareUnit.objects.create(client=self.client_obj, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
         self.reason_choice = Choice.objects.create(
             category="admission_reason",
             name="Blood Transfusion",

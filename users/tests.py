@@ -203,14 +203,18 @@ class DashboardViewTests(TestCase):
     """Tests for the main dashboard view."""
 
     def setUp(self):
-        self.user = User.objects.create_user(email="user@hospital.lk", password="pass")
+        from clients.models import ClientCareUnit
+
         self.unit = ThalassemiaUnit.objects.create(name="National Thalassemia Center")
+        self.user = User.objects.create_user(email="user@hospital.lk", password="pass", primary_unit=self.unit)
         self.client_obj = Client.objects.create(
             registration_number="TH-2026-001",
             full_name="Dashboard Patient",
             gender="M",
             date_of_birth="2010-01-01",
         )
+        ClientCareUnit.objects.create(client=self.client_obj, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
         self.admission = Admission.objects.create(
             client=self.client_obj,
             date_of_admission="2026-03-01",
@@ -239,6 +243,26 @@ class DashboardViewTests(TestCase):
         self.assertEqual(response.context["total_admissions"], 1)
         self.assertEqual(response.context["total_transfusions"], 1)
         self.assertEqual(response.context["total_units"], 1)
+
+    def test_dashboard_metrics_scoped_by_user_unit(self):
+        from clients.models import ClientCareUnit, ThalassemiaUnit
+
+        unit_b = ThalassemiaUnit.objects.create(name="Second Unit")
+        nurse_b = User.objects.create_user(email="nurse_b@hospital.lk", password="pass", role=User.Role.NURSE, primary_unit=unit_b)
+
+        # Nurse B has 0 clients in Unit B
+        self.client.force_login(nurse_b)
+        response = self.client.get(reverse("dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["total_clients"], 0)
+        self.assertEqual(response.context["total_admissions"], 0)
+
+        # System Admin sees global metrics (1 client)
+        sys_admin = User.objects.create_user(email="admin@hospital.lk", password="pass", role=User.Role.SYSTEM_ADMIN)
+        self.client.force_login(sys_admin)
+        response_admin = self.client.get(reverse("dashboard"))
+        self.assertEqual(response_admin.status_code, 200)
+        self.assertEqual(response_admin.context["total_clients"], 1)
 
 
 class UpdatePreferencesViewTests(TestCase):

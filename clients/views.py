@@ -34,7 +34,7 @@ def load_ds_divisions_view(request):
     return HttpResponse("".join(options))
 
 
-from users.permissions import UnitScopedClientPermissionMixin
+from users.permissions import UnitScopedClientPermissionMixin, UnitScopedQuerySetMixin, can_user_edit_entry
 
 
 # -------------------------------------------------------------------
@@ -250,6 +250,9 @@ class AdmissionCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.client_obj = get_object_or_404(Client, pk=self.kwargs["client_id"])
+        if not request.user.is_system_admin:
+            if not request.user.primary_unit or not self.client_obj.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
+                raise PermissionDenied("You do not have permission to log admissions for clients outside your primary unit.")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -270,12 +273,18 @@ class AdmissionCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class AdmissionUpdateView(LoginRequiredMixin, UpdateView):
+class AdmissionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateView):
     """Edit or discharge an admission."""
 
     model = Admission
     form_class = AdmissionForm
     template_name = "clients/modals/admission_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        admission = self.get_object()
+        if not can_user_edit_entry(request.user, admission, window_hours=48):
+            raise PermissionDenied("Editing admission records older than 48 hours requires Unit Admin or Doctor approval.")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         admission = form.save()
@@ -303,6 +312,9 @@ class TransfusionCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.admission_obj = get_object_or_404(Admission, pk=self.kwargs["admission_id"])
+        if not request.user.is_system_admin:
+            if not request.user.primary_unit or not self.admission_obj.client.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
+                raise PermissionDenied("You do not have permission to log transfusions for clients outside your primary unit.")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -327,12 +339,18 @@ class TransfusionCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class TransfusionUpdateView(LoginRequiredMixin, UpdateView):
+class TransfusionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateView):
     """Edit a transfusion record."""
 
     model = Transfusion
     form_class = TransfusionForm
     template_name = "clients/modals/transfusion_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        transfusion = self.get_object()
+        if not can_user_edit_entry(request.user, transfusion, window_hours=48):
+            raise PermissionDenied("Editing transfusion records older than 48 hours requires Unit Admin or Doctor approval.")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         transfusion = form.save()
@@ -405,6 +423,9 @@ class InvestigationCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.client_obj = get_object_or_404(Client, pk=self.kwargs["client_id"])
+        if not request.user.is_system_admin:
+            if not request.user.primary_unit or not self.client_obj.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
+                raise PermissionDenied("You do not have permission to log investigations for clients outside your primary unit.")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -428,12 +449,18 @@ class InvestigationCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class InvestigationUpdateView(LoginRequiredMixin, UpdateView):
+class InvestigationUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateView):
     """Edit an existing lab investigation record."""
 
     model = Investigation
     form_class = InvestigationForm
     template_name = "clients/modals/investigation_form_modal.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        investigation = self.get_object()
+        if not can_user_edit_entry(request.user, investigation, window_hours=48):
+            raise PermissionDenied("Editing investigation records older than 48 hours requires Unit Admin or Doctor approval.")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         investigation = form.save()

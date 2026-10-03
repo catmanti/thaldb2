@@ -18,14 +18,32 @@ class CustomLogoutView(DjangoLogoutView):
 
 @login_required
 def dashboard_view(request):
-    """Main role-customized dashboard view."""
-    total_clients = Client.objects.count()
-    total_admissions = Admission.objects.count()
-    total_transfusions = Transfusion.objects.count()
+    """Main role-customized dashboard view (Scoped by Unit for staff, Global for System Admins)."""
+    user = request.user
+
+    if user.is_system_admin or user.is_superuser:
+        clients_qs = Client.objects.all()
+        admissions_qs = Admission.objects.all()
+        transfusions_qs = Transfusion.objects.all()
+        visits_qs = ClinicVisit.objects.select_related("client", "clinic_type").all()
+    elif user.primary_unit:
+        clients_qs = Client.objects.filter(care_links__unit=user.primary_unit, care_links__is_active=True).distinct()
+        admissions_qs = Admission.objects.filter(client__care_links__unit=user.primary_unit, client__care_links__is_active=True).distinct()
+        transfusions_qs = Transfusion.objects.filter(admission__client__care_links__unit=user.primary_unit, admission__client__care_links__is_active=True).distinct()
+        visits_qs = ClinicVisit.objects.filter(client__care_links__unit=user.primary_unit, client__care_links__is_active=True).select_related("client", "clinic_type").distinct()
+    else:
+        clients_qs = Client.objects.none()
+        admissions_qs = Admission.objects.none()
+        transfusions_qs = Transfusion.objects.none()
+        visits_qs = ClinicVisit.objects.none()
+
+    total_clients = clients_qs.count()
+    total_admissions = admissions_qs.count()
+    total_transfusions = transfusions_qs.count()
     total_units = ThalassemiaUnit.objects.count()
 
-    recent_clients = Client.objects.select_related("diagnosis").order_by("-id")[:5]
-    recent_visits = ClinicVisit.objects.select_related("client", "clinic_type").order_by("-date_visit")[:5]
+    recent_clients = clients_qs.select_related("diagnosis").order_by("-id")[:5]
+    recent_visits = visits_qs.order_by("-date_visit")[:5]
 
     context = {
         "total_clients": total_clients,
@@ -34,6 +52,7 @@ def dashboard_view(request):
         "total_units": total_units,
         "recent_clients": recent_clients,
         "recent_visits": recent_visits,
+        "user_primary_unit": user.primary_unit,
     }
     return render(request, "dashboard.html", context)
 
