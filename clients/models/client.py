@@ -128,7 +128,16 @@ class Client(models.Model):
             return initials
     @property
     def primary_care_unit(self):
-        primary_link = self.care_links.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY).first()
+        if hasattr(self, "_prefetched_objects_cache") and "care_links" in self._prefetched_objects_cache:
+            for link in self.care_links.all():
+                if link.is_active and link.role == ClientCareUnit.Role.PRIMARY:
+                    return link.unit
+            return None
+        primary_link = (
+            self.care_links.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY)
+            .select_related("unit")
+            .first()
+        )
         return primary_link.unit if primary_link else None
 
     def save(self, *args, **kwargs):

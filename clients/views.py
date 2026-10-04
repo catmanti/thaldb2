@@ -49,7 +49,16 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related("diagnosis", "ds_division")
+        active_care_units_prefetch = models.Prefetch(
+            "care_links",
+            queryset=ClientCareUnit.objects.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY).select_related("unit"),
+        )
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("diagnosis", "ds_division")
+            .prefetch_related(active_care_units_prefetch)
+        )
         q = self.request.GET.get("q", "").strip()
         diagnosis_id = self.request.GET.get("diagnosis")
         gender = self.request.GET.get("gender")
@@ -89,28 +98,48 @@ class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, Deta
     template_name = "clients/client_detail.html"
     context_object_name = "client"
 
+    def get_queryset(self):
+        return super().get_queryset().select_related("diagnosis")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         client = self.object
 
-        # Fetch clinical histories
-        context["care_units"] = client.care_links.select_related("unit").all()
-        
-        # Admissions summary (Top 5 recent by default)
-        total_admissions_count = client.client_admissions.count()
-        admissions = list(
-            client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")[:5]
+        # Fetch clinical care units with unit details
+        care_links = list(client.care_links.filter(is_active=True).select_related("unit"))
+        context["care_units"] = care_links
+        # Cache on client instance so client.primary_care_unit does not trigger an extra DB query
+        if not hasattr(client, "_prefetched_objects_cache"):
+            client._prefetched_objects_cache = {}
+        client._prefetched_objects_cache["care_links"] = care_links
+
+        # Admissions summary (Top 5 recent by default, with optimized prefetching)
+        transfusions_prefetch = models.Prefetch(
+            "blood_transfusions",
+            queryset=Transfusion.objects.select_related("special_type").order_by("-date_of_transfusion", "-id"),
         )
+        admissions_qs = (
+            client.client_admissions.select_related("reason_for_admission")
+            .prefetch_related(transfusions_prefetch)
+            .order_by("-date_of_admission", "-id")
+        )
+        total_admissions_count = client.client_admissions.count()
+        admissions = list(admissions_qs[:5])
         context["admissions"] = admissions
         context["total_admissions_count"] = total_admissions_count
         context["has_more_admissions"] = total_admissions_count > len(admissions)
         context["next_admissions_limit"] = 10
         context["current_admissions_limit"] = 5
 
+        # Clinic visits (with clinic_type)
         context["clinic_visits"] = client.clinic_visits.select_related("clinic_type").order_by("-date_visit")
 
         # Lab Investigations summary (Top 5 recent by default in main card)
-        all_investigations = list(client.client_investigations.select_related("investigation_type", "laboratory").order_by("-date_done", "-id"))
+        all_investigations = list(
+            client.client_investigations.select_related("investigation_type", "laboratory").order_by(
+                "-date_done", "-id"
+            )
+        )
         total_investigations_count = len(all_investigations)
         investigations = all_investigations[:5]
         context["investigations"] = investigations
@@ -124,7 +153,7 @@ class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, Deta
         for inv in all_investigations:
             if inv.investigation_type and inv.investigation_type_id not in latest_inv_map:
                 latest_inv_map[inv.investigation_type_id] = inv
-        
+
         latest_list = list(latest_inv_map.values())
         context["latest_investigations"] = latest_list
 
@@ -141,12 +170,6 @@ class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, Deta
 
         context["overdue_investigations"] = overdue_investigations
         context["due_soon_investigations"] = due_soon_investigations
-
-        context["growth_records"] = client.growth_records.select_related("type").order_by("-date_measured")
-        context["vaccinations"] = client.vaccinations.select_related("vaccine_name").order_by("-date_given")
-        context["complications"] = client.client_complications.select_related("complication", "status").order_by("-detected_date")
-        context["family_members"] = client.family_members.select_related("diagnosis", "related_client").all()
-        context["transfer_records"] = client.transfer_record.select_related("transferred_unit").all()
 
         return context
 
@@ -211,9 +234,17 @@ def client_admissions_partial_view(request, client_id):
         if not request.user.primary_unit or not client.care_links.filter(unit=request.user.primary_unit, is_active=True).exists():
             raise PermissionDenied("You do not have permission to access clients outside your primary unit.")
     total_admissions_count = client.client_admissions.count()
-    limit_param = request.GET.get("limit", "5")
+    transfusions_prefetch = models.Prefetch(
+        "blood_transfusions",
+        queryset=Transfusion.objects.select_related("special_type").order_by("-date_of_transfusion", "-id"),
+    )
+    qs = (
+        client.client_admissions.select_related("reason_for_admission")
+        .prefetch_related(transfusions_prefetch)
+        .order_by("-date_of_admission", "-id")
+    )
 
-    qs = client.client_admissions.prefetch_related("blood_transfusions").order_by("-date_of_admission")
+    limit_param = request.GET.get("limit", "5")
 
     if limit_param == "all":
         admissions = list(qs)
