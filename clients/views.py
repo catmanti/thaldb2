@@ -283,7 +283,10 @@ class AdmissionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateVie
     def dispatch(self, request, *args, **kwargs):
         admission = self.get_object()
         if not can_user_edit_entry(request.user, admission, window_hours=48):
-            raise PermissionDenied("Editing admission records older than 48 hours requires Unit Admin or Doctor approval.")
+            msg = "Editing admission records older than 48 hours requires Unit Admin or Doctor approval."
+            if request.headers.get("HX-Request"):
+                return render(request, "clients/modals/permission_denied_modal.html", {"message": msg, "modal_title": "Editing Restricted"})
+            raise PermissionDenied(msg)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -349,7 +352,10 @@ class TransfusionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateV
     def dispatch(self, request, *args, **kwargs):
         transfusion = self.get_object()
         if not can_user_edit_entry(request.user, transfusion, window_hours=48):
-            raise PermissionDenied("Editing transfusion records older than 48 hours requires Unit Admin or Doctor approval.")
+            msg = "Editing transfusion records older than 48 hours requires Unit Admin or Doctor approval."
+            if request.headers.get("HX-Request"):
+                return render(request, "clients/modals/permission_denied_modal.html", {"message": msg, "modal_title": "Editing Restricted"})
+            raise PermissionDenied(msg)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -459,7 +465,10 @@ class InvestigationUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, Updat
     def dispatch(self, request, *args, **kwargs):
         investigation = self.get_object()
         if not can_user_edit_entry(request.user, investigation, window_hours=48):
-            raise PermissionDenied("Editing investigation records older than 48 hours requires Unit Admin or Doctor approval.")
+            msg = "Editing investigation records older than 48 hours requires Unit Admin or Doctor approval."
+            if request.headers.get("HX-Request"):
+                return render(request, "clients/modals/permission_denied_modal.html", {"message": msg, "modal_title": "Editing Restricted"})
+            raise PermissionDenied(msg)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):

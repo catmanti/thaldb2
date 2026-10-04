@@ -330,3 +330,47 @@ class UnitScopedClientPermissionsTests(TestCase):
         self.assertEqual(response_a.status_code, 200)
         self.assertEqual(response_b.status_code, 200)
 
+    def test_htmx_permission_denied_returns_modal(self):
+        # Create an admission older than 48 hours
+        old_admission = Admission.objects.create(
+            client=self.client_a,
+            date_of_admission=timezone.now().date() - timezone.timedelta(days=5),
+        )
+        Admission.objects.filter(pk=old_admission.pk).update(
+            created_at=timezone.now() - timezone.timedelta(hours=120)
+        )
+        self.client.force_login(self.nurse_a)
+
+        # Non-HTMX GET returns 403 PermissionDenied
+        edit_url = reverse("clients:admission-update", kwargs={"pk": old_admission.pk})
+        resp = self.client.get(edit_url)
+        self.assertEqual(resp.status_code, 403)
+
+        # HTMX GET returns 200 with permission denied modal partial
+        htmx_resp = self.client.get(edit_url, HTTP_HX_REQUEST="true")
+        self.assertEqual(htmx_resp.status_code, 200)
+        self.assertTemplateUsed(htmx_resp, "clients/modals/permission_denied_modal.html")
+        self.assertContains(htmx_resp, "Editing Restricted")
+
+    def test_historical_transfusion_event_date_locked(self):
+        from users.permissions import can_user_edit_entry
+        import datetime
+
+        # Create admission and a historical transfusion with date_of_transfusion = 2026-01-01
+        admission = Admission.objects.create(
+            client=self.client_a,
+            date_of_admission=datetime.date(2026, 1, 1),
+        )
+        transfusion = Transfusion.objects.create(
+            admission=admission,
+            date_of_transfusion=datetime.date(2026, 1, 1),
+        )
+
+        # Nurse A cannot edit historical transfusion even if created_at is today
+        self.assertFalse(can_user_edit_entry(self.nurse_a, transfusion))
+
+        # System Admin can edit historical transfusion
+        self.assertTrue(can_user_edit_entry(self.sys_admin, transfusion))
+
+
+

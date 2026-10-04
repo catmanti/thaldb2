@@ -136,7 +136,7 @@ def can_user_edit_entry(user: User, entry, window_hours: int = 48) -> bool:
     
     - System Admins, Unit Admins, and Doctors can edit at any time.
     - Data Entry Clerks and Nurses can edit entries within `window_hours` (default 48 hours) 
-      of creation or event date. Beyond 48 hours, edit permissions escalate to Unit Admin/Doctor.
+      of creation AND event date. Beyond 48 hours, edit permissions escalate to Unit Admin/Doctor.
     """
     if not user or not user.is_authenticated:
         return False
@@ -145,17 +145,22 @@ def can_user_edit_entry(user: User, entry, window_hours: int = 48) -> bool:
     if user.is_unit_admin or user.is_doctor or user.is_system_admin:
         return True
 
-    # Determine timestamp of creation or event
-    timestamp = getattr(entry, "created_at", None)
-    if not timestamp:
-        # Fallback to date fields if created_at is not present
-        date_val = getattr(entry, "date_done", None) or getattr(entry, "date_of_admission", None) or getattr(entry, "date_of_transfusion", None)
-        if date_val:
-            timestamp = timezone.make_aware(datetime.datetime.combine(date_val, datetime.time.min))
-
-    if not timestamp:
-        return True
-
-    # Check if entry creation is within the allowed window
     cutoff = timezone.now() - datetime.timedelta(hours=window_hours)
-    return timestamp >= cutoff
+
+    # 1. Check clinical event date (date_of_transfusion, date_of_admission, date_done)
+    event_date = getattr(entry, "date_done", None) or getattr(entry, "date_of_admission", None) or getattr(entry, "date_of_transfusion", None)
+    if event_date:
+        if isinstance(event_date, datetime.date) and not isinstance(event_date, datetime.datetime):
+            event_dt = timezone.make_aware(datetime.datetime.combine(event_date, datetime.time.max))
+        else:
+            event_dt = event_date
+
+        if event_dt < cutoff:
+            return False
+
+    # 2. Check database creation timestamp
+    created_at = getattr(entry, "created_at", None)
+    if created_at and created_at < cutoff:
+        return False
+
+    return True

@@ -1,3 +1,4 @@
+{% load client_permissions %}
 <div id="admissions-card" class="card bg-base-100 shadow border border-base-300" hx-get="{% url 'clients:admissions-partial' client.pk %}" hx-trigger="reloadAdmissions from:body" hx-swap="outerHTML">
     <div class="card-body p-5">
         <div class="flex items-center justify-between border-b border-base-200 pb-2">
@@ -24,6 +25,7 @@
                 <div class="flex items-center justify-between text-xs font-bold">
                     <div class="flex items-center gap-2">
                         <span class="text-primary">Admission: {{ adm.date_of_admission }}</span>
+                        {% if adm|can_edit_entry:request.user %}
                         <button type="button" 
                                 hx-get="{% url 'clients:admission-update' adm.pk %}" 
                                 hx-target="#modal-container" 
@@ -31,6 +33,12 @@
                                 class="btn btn-ghost btn-xs text-info px-1 py-0 h-auto font-normal">
                             Edit
                         </button>
+                        {% else %}
+                        <span class="btn btn-ghost btn-xs text-base-content/40 px-1 py-0 h-auto font-normal cursor-not-allowed opacity-60"
+                              title="🔒 Editing records older than 48 hours requires Doctor or Unit Admin approval.">
+                            🔒 Edit
+                        </span>
+                        {% endif %}
                     </div>
                     <span class="badge badge-ghost badge-sm">
                         {% if adm.date_of_discharge %}Discharged: {{ adm.date_of_discharge }}{% else %}Active / In-patient{% endif %}
@@ -67,6 +75,7 @@
                             {% if tr.special_type %}
                             <span class="badge badge-warning badge-xs">{{ tr.special_type.name }}</span>
                             {% endif %}
+                            {% if tr|can_edit_entry:request.user %}
                             <button type="button" 
                                     hx-get="{% url 'clients:transfusion-update' tr.pk %}" 
                                     hx-target="#modal-container" 
@@ -74,6 +83,12 @@
                                     class="btn btn-ghost btn-xs text-info">
                                 Edit
                             </button>
+                            {% else %}
+                            <span class="btn btn-ghost btn-xs text-base-content/40 cursor-not-allowed opacity-60"
+                                  title="🔒 Editing records older than 48 hours requires Doctor or Unit Admin approval.">
+                                🔒 Edit
+                            </span>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
