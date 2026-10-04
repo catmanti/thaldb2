@@ -1,0 +1,3563 @@
+[
+{
+  "model": "clients.choice",
+  "pk": 1,
+  "fields": {
+    "category": "marital_status",
+    "name": "Married"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 2,
+  "fields": {
+    "category": "marital_status",
+    "name": "Unmarried"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 3,
+  "fields": {
+    "category": "admission_reason",
+    "name": "Blood Transfusion"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 4,
+  "fields": {
+    "category": "admission_reason",
+    "name": "IV Iron Therapy"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 5,
+  "fields": {
+    "category": "admission_reason",
+    "name": "Complications Management"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 6,
+  "fields": {
+    "category": "admission_reason",
+    "name": "Other"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 7,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Thalassaemia"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 8,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Endocrinology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 9,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Hematology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 10,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Nephrology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 11,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Cardiology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 12,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Gastroenterology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 13,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Hepatology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 14,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Oncology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 15,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Respiratory"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 16,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Neurology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 17,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Orthopedics"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 18,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Surgery"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 19,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Urology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 20,
+  "fields": {
+    "category": "clinic_type",
+    "name": "ENT"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 21,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Ophthalmology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 22,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Dermatology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 23,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Psychiatry"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 24,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Gynecology"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 25,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Obstetrics"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 26,
+  "fields": {
+    "category": "clinic_type",
+    "name": "Other"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 27,
+  "fields": {
+    "category": "marital_status",
+    "name": "Single"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 28,
+  "fields": {
+    "category": "marital_status",
+    "name": "Divorced"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 29,
+  "fields": {
+    "category": "marital_status",
+    "name": "Widowed"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 30,
+  "fields": {
+    "category": "marital_status",
+    "name": "Separated"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 31,
+  "fields": {
+    "category": "current_status",
+    "name": "Active"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 32,
+  "fields": {
+    "category": "current_status",
+    "name": "Inactive"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 33,
+  "fields": {
+    "category": "current_status",
+    "name": "Comatose"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 34,
+  "fields": {
+    "category": "current_status",
+    "name": "Dead"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 35,
+  "fields": {
+    "category": "current_status",
+    "name": "Transferred"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 36,
+  "fields": {
+    "category": "complication_status",
+    "name": "Active"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 37,
+  "fields": {
+    "category": "complication_status",
+    "name": "Inactive"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 38,
+  "fields": {
+    "category": "complication_status",
+    "name": "Resolved"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 39,
+  "fields": {
+    "category": "vaccine_name",
+    "name": "Hepatitis B"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 40,
+  "fields": {
+    "category": "vaccine_name",
+    "name": "Hepatitis C"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 41,
+  "fields": {
+    "category": "vaccine_name",
+    "name": "Influenza"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 42,
+  "fields": {
+    "category": "vaccine_name",
+    "name": "Pneumococcal"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 43,
+  "fields": {
+    "category": "vaccine_name",
+    "name": "Other"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 44,
+  "fields": {
+    "category": "special_blood_type",
+    "name": "Selected"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 45,
+  "fields": {
+    "category": "special_blood_type",
+    "name": "Erradicated"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 46,
+  "fields": {
+    "category": "special_blood_type",
+    "name": "LRB"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 47,
+  "fields": {
+    "category": "growth",
+    "name": "Height"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 48,
+  "fields": {
+    "category": "growth",
+    "name": "Head circumference"
+  }
+},
+{
+  "model": "clients.choice",
+  "pk": 49,
+  "fields": {
+    "category": "growth",
+    "name": "Weight"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 1,
+  "fields": {
+    "name": "Central"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 2,
+  "fields": {
+    "name": "Eastern"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 3,
+  "fields": {
+    "name": "North Central"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 4,
+  "fields": {
+    "name": "Northern"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 5,
+  "fields": {
+    "name": "North Western"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 6,
+  "fields": {
+    "name": "Sabaragamuwa"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 7,
+  "fields": {
+    "name": "Southern"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 8,
+  "fields": {
+    "name": "Uva"
+  }
+},
+{
+  "model": "clients.province",
+  "pk": 9,
+  "fields": {
+    "name": "Western"
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 1,
+  "fields": {
+    "name": "Kandy",
+    "province": 1
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 2,
+  "fields": {
+    "name": "Matale",
+    "province": 1
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 3,
+  "fields": {
+    "name": "Nuwara Eliya",
+    "province": 1
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 4,
+  "fields": {
+    "name": "Ampara",
+    "province": 2
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 5,
+  "fields": {
+    "name": "Batticaloa",
+    "province": 2
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 6,
+  "fields": {
+    "name": "Trincomalee",
+    "province": 2
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 7,
+  "fields": {
+    "name": "Anuradhapura",
+    "province": 3
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 8,
+  "fields": {
+    "name": "Polonnaruwa",
+    "province": 3
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 9,
+  "fields": {
+    "name": "Jaffna",
+    "province": 4
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 10,
+  "fields": {
+    "name": "Kilinochchi",
+    "province": 4
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 11,
+  "fields": {
+    "name": "Mannar",
+    "province": 4
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 12,
+  "fields": {
+    "name": "Mullaitivu",
+    "province": 4
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 13,
+  "fields": {
+    "name": "Vavuniya",
+    "province": 4
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 14,
+  "fields": {
+    "name": "Kurunegala",
+    "province": 5
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 15,
+  "fields": {
+    "name": "Puttalam",
+    "province": 5
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 16,
+  "fields": {
+    "name": "Kegalle",
+    "province": 6
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 17,
+  "fields": {
+    "name": "Ratnapura",
+    "province": 6
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 18,
+  "fields": {
+    "name": "Galle",
+    "province": 7
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 19,
+  "fields": {
+    "name": "Hambantota",
+    "province": 7
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 20,
+  "fields": {
+    "name": "Matara",
+    "province": 7
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 21,
+  "fields": {
+    "name": "Badulla",
+    "province": 8
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 22,
+  "fields": {
+    "name": "Moneragala",
+    "province": 8
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 23,
+  "fields": {
+    "name": "Colombo",
+    "province": 9
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 24,
+  "fields": {
+    "name": "Gampaha",
+    "province": 9
+  }
+},
+{
+  "model": "clients.district",
+  "pk": 25,
+  "fields": {
+    "name": "Kalutara",
+    "province": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 1,
+  "fields": {
+    "name": "Akurana",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 2,
+  "fields": {
+    "name": "Delthota",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 3,
+  "fields": {
+    "name": "Doluwa",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 4,
+  "fields": {
+    "name": "Gangawata Korale",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 5,
+  "fields": {
+    "name": "Ganga Ihala Korale",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 6,
+  "fields": {
+    "name": "Harispattuwa",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 7,
+  "fields": {
+    "name": "Hatharaliyadda",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 8,
+  "fields": {
+    "name": "Kundasale",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 9,
+  "fields": {
+    "name": "Medadumbara",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 10,
+  "fields": {
+    "name": "Minipe",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 11,
+  "fields": {
+    "name": "Panvila",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 12,
+  "fields": {
+    "name": "Pasbage Korale",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 13,
+  "fields": {
+    "name": "Pathadumbara",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 14,
+  "fields": {
+    "name": "Pathahewaheta",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 15,
+  "fields": {
+    "name": "Poojapitiya",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 16,
+  "fields": {
+    "name": "Thumpane",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 17,
+  "fields": {
+    "name": "Udadumbara",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 18,
+  "fields": {
+    "name": "Udapalatha",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 19,
+  "fields": {
+    "name": "Udunuwara",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 20,
+  "fields": {
+    "name": "Yatinuwara",
+    "district": 1
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 21,
+  "fields": {
+    "name": "Ambanganga Korale",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 22,
+  "fields": {
+    "name": "Dambulla",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 23,
+  "fields": {
+    "name": "Galewela",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 24,
+  "fields": {
+    "name": "Laggala-Pallegama",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 25,
+  "fields": {
+    "name": "Matale",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 26,
+  "fields": {
+    "name": "Naula",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 27,
+  "fields": {
+    "name": "Pallepola",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 28,
+  "fields": {
+    "name": "Rattota",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 29,
+  "fields": {
+    "name": "Ukuwela",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 30,
+  "fields": {
+    "name": "Wilgamuwa",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 31,
+  "fields": {
+    "name": "Yatawatta",
+    "district": 2
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 32,
+  "fields": {
+    "name": "Ambagamuwa",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 33,
+  "fields": {
+    "name": "Hanguranketha",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 34,
+  "fields": {
+    "name": "Kothmale",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 35,
+  "fields": {
+    "name": "Nuwara Eliya",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 36,
+  "fields": {
+    "name": "Walapane",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 37,
+  "fields": {
+    "name": "Norwood",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 38,
+  "fields": {
+    "name": "Kothmale West",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 39,
+  "fields": {
+    "name": "Nildandahinna",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 40,
+  "fields": {
+    "name": "Thalawakale",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 41,
+  "fields": {
+    "name": "Mathurata",
+    "district": 3
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 42,
+  "fields": {
+    "name": "Addalachchenai",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 43,
+  "fields": {
+    "name": "Akkaraipattu",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 44,
+  "fields": {
+    "name": "Alayadiwembu",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 45,
+  "fields": {
+    "name": "Ampara",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 46,
+  "fields": {
+    "name": "Damana",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 47,
+  "fields": {
+    "name": "Dehiattakandiya",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 48,
+  "fields": {
+    "name": "Eragama",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 49,
+  "fields": {
+    "name": "Kalmunai Muslim",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 50,
+  "fields": {
+    "name": "Kalmunai Tamil",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 51,
+  "fields": {
+    "name": "Karaitivu",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 52,
+  "fields": {
+    "name": "Lahugala",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 53,
+  "fields": {
+    "name": "Mahaoya",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 54,
+  "fields": {
+    "name": "Navithanveli",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 55,
+  "fields": {
+    "name": "Ninthavur",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 56,
+  "fields": {
+    "name": "Padiyathalawa",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 57,
+  "fields": {
+    "name": "Pothuvil",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 58,
+  "fields": {
+    "name": "Sainthamarathu",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 59,
+  "fields": {
+    "name": "Samanthurai",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 60,
+  "fields": {
+    "name": "Thirukkovil",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 61,
+  "fields": {
+    "name": "Uhana",
+    "district": 4
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 62,
+  "fields": {
+    "name": "Eravur Pattu",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 63,
+  "fields": {
+    "name": "Eravur Town",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 64,
+  "fields": {
+    "name": "Kattankudy",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 65,
+  "fields": {
+    "name": "Koralai Pattu",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 66,
+  "fields": {
+    "name": "Koralai Pattu Central",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 67,
+  "fields": {
+    "name": "Koralai Pattu North",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 68,
+  "fields": {
+    "name": "Koralai Pattu South",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 69,
+  "fields": {
+    "name": "Koralai Pattu West",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 70,
+  "fields": {
+    "name": "Manmunai North",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 71,
+  "fields": {
+    "name": "Manmunai Pattu",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 72,
+  "fields": {
+    "name": "Manmunai S. and Eruvil Pattu",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 73,
+  "fields": {
+    "name": "Manmunai South West",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 74,
+  "fields": {
+    "name": "Manmunai West",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 75,
+  "fields": {
+    "name": "Porativu Pattu",
+    "district": 5
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 76,
+  "fields": {
+    "name": "Gomarankadawala",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 77,
+  "fields": {
+    "name": "Kantalai",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 78,
+  "fields": {
+    "name": "Kinniya",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 79,
+  "fields": {
+    "name": "Kuchchaveli",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 80,
+  "fields": {
+    "name": "Morawewa",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 81,
+  "fields": {
+    "name": "Muttur",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 82,
+  "fields": {
+    "name": "Padavi Sri Pura",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 83,
+  "fields": {
+    "name": "Seruvila",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 84,
+  "fields": {
+    "name": "Thambalagamuwa",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 85,
+  "fields": {
+    "name": "Trincomalee",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 86,
+  "fields": {
+    "name": "Verugal",
+    "district": 6
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 87,
+  "fields": {
+    "name": "Galnewa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 88,
+  "fields": {
+    "name": "Galenbindunuwewa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 89,
+  "fields": {
+    "name": "Horowpothana",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 90,
+  "fields": {
+    "name": "Ipalogama",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 91,
+  "fields": {
+    "name": "Kahatagasdigiliya",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 92,
+  "fields": {
+    "name": "Kebithigollewa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 93,
+  "fields": {
+    "name": "Kekirawa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 94,
+  "fields": {
+    "name": "Mahavilachchiya",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 95,
+  "fields": {
+    "name": "Medawachchiya",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 96,
+  "fields": {
+    "name": "Mihinthale",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 97,
+  "fields": {
+    "name": "Nachchadoowa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 98,
+  "fields": {
+    "name": "Nochchiyagama",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 99,
+  "fields": {
+    "name": "Nuwaragam Palatha Central",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 100,
+  "fields": {
+    "name": "Nuwaragam Palatha East",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 101,
+  "fields": {
+    "name": "Padaviya",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 102,
+  "fields": {
+    "name": "Palagala",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 103,
+  "fields": {
+    "name": "Palugaswewa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 104,
+  "fields": {
+    "name": "Rajanganaya",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 105,
+  "fields": {
+    "name": "Rambewa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 106,
+  "fields": {
+    "name": "Thalawa",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 107,
+  "fields": {
+    "name": "Thambuttegama",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 108,
+  "fields": {
+    "name": "Thirappane",
+    "district": 7
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 109,
+  "fields": {
+    "name": "Dimbulagala",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 110,
+  "fields": {
+    "name": "Elahera",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 111,
+  "fields": {
+    "name": "Hingurakgoda",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 112,
+  "fields": {
+    "name": "Lankapura",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 113,
+  "fields": {
+    "name": "Medirigiriya",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 114,
+  "fields": {
+    "name": "Thamankaduwa",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 115,
+  "fields": {
+    "name": "Welikanda",
+    "district": 8
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 116,
+  "fields": {
+    "name": "Delft",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 117,
+  "fields": {
+    "name": "Island North",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 118,
+  "fields": {
+    "name": "Island South",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 119,
+  "fields": {
+    "name": "Jaffna",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 120,
+  "fields": {
+    "name": "Karainagar",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 121,
+  "fields": {
+    "name": "Nallur",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 122,
+  "fields": {
+    "name": "Thenmaradchi",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 123,
+  "fields": {
+    "name": "Vadamaradchi East",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 124,
+  "fields": {
+    "name": "Vadamaradchi North",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 125,
+  "fields": {
+    "name": "Vadamaradchi South-West",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 126,
+  "fields": {
+    "name": "Valikamam East",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 127,
+  "fields": {
+    "name": "Valikamam North",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 128,
+  "fields": {
+    "name": "Valikamam South",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 129,
+  "fields": {
+    "name": "Valikamam South-West",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 130,
+  "fields": {
+    "name": "Valikamam West",
+    "district": 9
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 131,
+  "fields": {
+    "name": "Kandavalai",
+    "district": 10
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 132,
+  "fields": {
+    "name": "Karachchi",
+    "district": 10
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 133,
+  "fields": {
+    "name": "Pachchilaipalli",
+    "district": 10
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 134,
+  "fields": {
+    "name": "Poonakary",
+    "district": 10
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 135,
+  "fields": {
+    "name": "Madhu",
+    "district": 11
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 136,
+  "fields": {
+    "name": "Mannar",
+    "district": 11
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 137,
+  "fields": {
+    "name": "Manthai West",
+    "district": 11
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 138,
+  "fields": {
+    "name": "Musalai",
+    "district": 11
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 139,
+  "fields": {
+    "name": "Nanaddan",
+    "district": 11
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 140,
+  "fields": {
+    "name": "Manthai East",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 141,
+  "fields": {
+    "name": "Maritimepattu",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 142,
+  "fields": {
+    "name": "Oddusuddan",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 143,
+  "fields": {
+    "name": "Puthukudiyiruppu",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 144,
+  "fields": {
+    "name": "Thunukkai",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 145,
+  "fields": {
+    "name": "Welioya",
+    "district": 12
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 146,
+  "fields": {
+    "name": "Vavuniya",
+    "district": 13
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 147,
+  "fields": {
+    "name": "Vavuniya North",
+    "district": 13
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 148,
+  "fields": {
+    "name": "Vavuniya South",
+    "district": 13
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 149,
+  "fields": {
+    "name": "Vengalacheddikulam",
+    "district": 13
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 150,
+  "fields": {
+    "name": "Alawwa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 151,
+  "fields": {
+    "name": "Ambanpola",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 152,
+  "fields": {
+    "name": "Bamunakotuwa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 153,
+  "fields": {
+    "name": "Bingiriya",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 154,
+  "fields": {
+    "name": "Ehetuwewa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 155,
+  "fields": {
+    "name": "Galgamuwa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 156,
+  "fields": {
+    "name": "Ganewatta",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 157,
+  "fields": {
+    "name": "Giribawa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 158,
+  "fields": {
+    "name": "Ibbagamuwa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 159,
+  "fields": {
+    "name": "Katupotha",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 160,
+  "fields": {
+    "name": "Kobeigane",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 161,
+  "fields": {
+    "name": "Kotavehera",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 162,
+  "fields": {
+    "name": "Kuliyapitiya East",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 163,
+  "fields": {
+    "name": "Kuliyapitiya West",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 164,
+  "fields": {
+    "name": "Kurunegala",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 165,
+  "fields": {
+    "name": "Mahawa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 166,
+  "fields": {
+    "name": "Mallawapitiya",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 167,
+  "fields": {
+    "name": "Maspotha",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 168,
+  "fields": {
+    "name": "Mawathagama",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 169,
+  "fields": {
+    "name": "Narammala",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 170,
+  "fields": {
+    "name": "Nikaweratiya",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 171,
+  "fields": {
+    "name": "Panduwasnuwara",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 172,
+  "fields": {
+    "name": "Pannala",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 173,
+  "fields": {
+    "name": "Polgahawela",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 174,
+  "fields": {
+    "name": "Polpithigama",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 175,
+  "fields": {
+    "name": "Rasnayakapura",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 176,
+  "fields": {
+    "name": "Rideegama",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 177,
+  "fields": {
+    "name": "Udubaddawa",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 178,
+  "fields": {
+    "name": "Wariyapola",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 179,
+  "fields": {
+    "name": "Weerambugedara",
+    "district": 14
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 180,
+  "fields": {
+    "name": "Anamaduwa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 181,
+  "fields": {
+    "name": "Arachchikattuwa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 182,
+  "fields": {
+    "name": "Chilaw",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 183,
+  "fields": {
+    "name": "Dankotuwa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 184,
+  "fields": {
+    "name": "Kalpitiya",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 185,
+  "fields": {
+    "name": "Karuwalagaswewa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 186,
+  "fields": {
+    "name": "Madampe",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 187,
+  "fields": {
+    "name": "Mahakumbukkadawala",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 188,
+  "fields": {
+    "name": "Mahawewa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 189,
+  "fields": {
+    "name": "Mundalama",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 190,
+  "fields": {
+    "name": "Nattandiya",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 191,
+  "fields": {
+    "name": "Nawagattegama",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 192,
+  "fields": {
+    "name": "Pallama",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 193,
+  "fields": {
+    "name": "Puttalam",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 194,
+  "fields": {
+    "name": "Vanathavilluwa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 195,
+  "fields": {
+    "name": "Wennappuwa",
+    "district": 15
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 196,
+  "fields": {
+    "name": "Aranayaka",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 197,
+  "fields": {
+    "name": "Bulathkohupitiya",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 198,
+  "fields": {
+    "name": "Dehiovita",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 199,
+  "fields": {
+    "name": "Deraniyagala",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 200,
+  "fields": {
+    "name": "Galigamuwa",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 201,
+  "fields": {
+    "name": "Kegalle",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 202,
+  "fields": {
+    "name": "Mawanella",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 203,
+  "fields": {
+    "name": "Rambukkana",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 204,
+  "fields": {
+    "name": "Ruwanwella",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 205,
+  "fields": {
+    "name": "Warakapola",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 206,
+  "fields": {
+    "name": "Yatiyanthota",
+    "district": 16
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 207,
+  "fields": {
+    "name": "Ayagama",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 208,
+  "fields": {
+    "name": "Balangoda",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 209,
+  "fields": {
+    "name": "Eheliyagoda",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 210,
+  "fields": {
+    "name": "Elapattha",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 211,
+  "fields": {
+    "name": "Embilipitiya",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 212,
+  "fields": {
+    "name": "Godakawela",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 213,
+  "fields": {
+    "name": "Imbulpe",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 214,
+  "fields": {
+    "name": "Kahawatta",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 215,
+  "fields": {
+    "name": "Kalawana",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 216,
+  "fields": {
+    "name": "Kiriella",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 217,
+  "fields": {
+    "name": "Kolonna",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 218,
+  "fields": {
+    "name": "Kuruvita",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 219,
+  "fields": {
+    "name": "Nivithigala",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 220,
+  "fields": {
+    "name": "Opanayaka",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 221,
+  "fields": {
+    "name": "Pelmadulla",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 222,
+  "fields": {
+    "name": "Ratnapura",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 223,
+  "fields": {
+    "name": "Weligepola",
+    "district": 17
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 224,
+  "fields": {
+    "name": "Akmeemana",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 225,
+  "fields": {
+    "name": "Ambalangoda",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 226,
+  "fields": {
+    "name": "Baddegama",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 227,
+  "fields": {
+    "name": "Balapitiya",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 228,
+  "fields": {
+    "name": "Benthota",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 229,
+  "fields": {
+    "name": "Bope-Poddala",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 230,
+  "fields": {
+    "name": "Elpitiya",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 231,
+  "fields": {
+    "name": "Galle",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 232,
+  "fields": {
+    "name": "Gonapinuwala",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 233,
+  "fields": {
+    "name": "Habaraduwa",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 234,
+  "fields": {
+    "name": "Hikkaduwa",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 235,
+  "fields": {
+    "name": "Imaduwa",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 236,
+  "fields": {
+    "name": "Karandeniya",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 237,
+  "fields": {
+    "name": "Nagoda",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 238,
+  "fields": {
+    "name": "Neluwa",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 239,
+  "fields": {
+    "name": "Niyagama",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 240,
+  "fields": {
+    "name": "Thawalama",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 241,
+  "fields": {
+    "name": "Welivitiya-Divithura",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 242,
+  "fields": {
+    "name": "Yakkalamulla",
+    "district": 18
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 243,
+  "fields": {
+    "name": "Ambalantota",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 244,
+  "fields": {
+    "name": "Angunakolapelessa",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 245,
+  "fields": {
+    "name": "Beliatta",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 246,
+  "fields": {
+    "name": "Hambantota",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 247,
+  "fields": {
+    "name": "Katuwana",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 248,
+  "fields": {
+    "name": "Lunugamvehera",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 249,
+  "fields": {
+    "name": "Okewela",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 250,
+  "fields": {
+    "name": "Sooriyawewa",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 251,
+  "fields": {
+    "name": "Tangalle",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 252,
+  "fields": {
+    "name": "Thissamaharama",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 253,
+  "fields": {
+    "name": "Walasmulla",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 254,
+  "fields": {
+    "name": "Weeraketiya",
+    "district": 19
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 255,
+  "fields": {
+    "name": "Akuressa",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 256,
+  "fields": {
+    "name": "Athuraliya",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 257,
+  "fields": {
+    "name": "Devinuwara",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 258,
+  "fields": {
+    "name": "Dickwella",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 259,
+  "fields": {
+    "name": "Hakmana",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 260,
+  "fields": {
+    "name": "Kamburupitiya",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 261,
+  "fields": {
+    "name": "Kirinda Puhulwella",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 262,
+  "fields": {
+    "name": "Kotapola",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 263,
+  "fields": {
+    "name": "Malimbada",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 264,
+  "fields": {
+    "name": "Matara",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 265,
+  "fields": {
+    "name": "Mulatiyana",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 266,
+  "fields": {
+    "name": "Pasgoda",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 267,
+  "fields": {
+    "name": "Pitabeddara",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 268,
+  "fields": {
+    "name": "Thihagoda",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 269,
+  "fields": {
+    "name": "Weligama",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 270,
+  "fields": {
+    "name": "Welipitiya",
+    "district": 20
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 271,
+  "fields": {
+    "name": "Badulla",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 272,
+  "fields": {
+    "name": "Bandarawela",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 273,
+  "fields": {
+    "name": "Ella",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 274,
+  "fields": {
+    "name": "Haldummulla",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 275,
+  "fields": {
+    "name": "Hali-Ela",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 276,
+  "fields": {
+    "name": "Haputale",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 277,
+  "fields": {
+    "name": "Kandaketiya",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 278,
+  "fields": {
+    "name": "Lunugala",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 279,
+  "fields": {
+    "name": "Mahiyanganaya",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 280,
+  "fields": {
+    "name": "Meegahakivula",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 281,
+  "fields": {
+    "name": "Passara",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 282,
+  "fields": {
+    "name": "Rideemaliyadda",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 283,
+  "fields": {
+    "name": "Soranathota",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 284,
+  "fields": {
+    "name": "Uva-Paranagama",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 285,
+  "fields": {
+    "name": "Welimada",
+    "district": 21
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 286,
+  "fields": {
+    "name": "Badalkumbura",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 287,
+  "fields": {
+    "name": "Bibile",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 288,
+  "fields": {
+    "name": "Buttala",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 289,
+  "fields": {
+    "name": "Katharagama",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 290,
+  "fields": {
+    "name": "Madulla",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 291,
+  "fields": {
+    "name": "Medagama",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 292,
+  "fields": {
+    "name": "Moneragala",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 293,
+  "fields": {
+    "name": "Sevanagala",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 294,
+  "fields": {
+    "name": "Siyambalanduwa",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 295,
+  "fields": {
+    "name": "Thanamalvila",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 296,
+  "fields": {
+    "name": "Wellawaya",
+    "district": 22
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 297,
+  "fields": {
+    "name": "Colombo",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 298,
+  "fields": {
+    "name": "Dehiwala",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 299,
+  "fields": {
+    "name": "Homagama",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 300,
+  "fields": {
+    "name": "Kaduwela",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 301,
+  "fields": {
+    "name": "Kesbewa",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 302,
+  "fields": {
+    "name": "Kolonnawa",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 303,
+  "fields": {
+    "name": "Kotte",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 304,
+  "fields": {
+    "name": "Maharagama",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 305,
+  "fields": {
+    "name": "Moratuwa",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 306,
+  "fields": {
+    "name": "Padukka",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 307,
+  "fields": {
+    "name": "Ratmalana",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 308,
+  "fields": {
+    "name": "Seethawaka",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 309,
+  "fields": {
+    "name": "Thimbirigasyaya",
+    "district": 23
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 310,
+  "fields": {
+    "name": "Attanagalla",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 311,
+  "fields": {
+    "name": "Biyagama",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 312,
+  "fields": {
+    "name": "Divulapitiya",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 313,
+  "fields": {
+    "name": "Dompe",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 314,
+  "fields": {
+    "name": "Gampaha",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 315,
+  "fields": {
+    "name": "Ja-Ela",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 316,
+  "fields": {
+    "name": "Katana",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 317,
+  "fields": {
+    "name": "Kelaniya",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 318,
+  "fields": {
+    "name": "Mahara",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 319,
+  "fields": {
+    "name": "Minuwangoda",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 320,
+  "fields": {
+    "name": "Mirigama",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 321,
+  "fields": {
+    "name": "Negombo",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 322,
+  "fields": {
+    "name": "Wattala",
+    "district": 24
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 323,
+  "fields": {
+    "name": "Agalawatta",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 324,
+  "fields": {
+    "name": "Bandaragama",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 325,
+  "fields": {
+    "name": "Beruwala",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 326,
+  "fields": {
+    "name": "Bulathsinhala",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 327,
+  "fields": {
+    "name": "Dodangoda",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 328,
+  "fields": {
+    "name": "Horana",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 329,
+  "fields": {
+    "name": "Ingiriya",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 330,
+  "fields": {
+    "name": "Kalutara",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 331,
+  "fields": {
+    "name": "Madurawela",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 332,
+  "fields": {
+    "name": "Mathugama",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 333,
+  "fields": {
+    "name": "Millaniya",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 334,
+  "fields": {
+    "name": "Palindanuwara",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 335,
+  "fields": {
+    "name": "Panadura",
+    "district": 25
+  }
+},
+{
+  "model": "clients.ds_division",
+  "pk": 336,
+  "fields": {
+    "name": "Walallavita",
+    "district": 25
+  }
+},
+{
+  "model": "clients.thalassemiaunit",
+  "pk": 1,
+  "fields": {
+    "name": "Kurunegala TH",
+    "description": "NTC",
+    "ds_division": 164
+  }
+},
+{
+  "model": "clients.thalassemiaunit",
+  "pk": 2,
+  "fields": {
+    "name": "Ragama TH",
+    "description": "",
+    "ds_division": 314
+  }
+},
+{
+  "model": "clients.thalassemiaunit",
+  "pk": 3,
+  "fields": {
+    "name": "Anuradhapura TH",
+    "description": "",
+    "ds_division": 100
+  }
+},
+{
+  "model": "clients.thalassemiaunit",
+  "pk": 4,
+  "fields": {
+    "name": "Kandy TH",
+    "description": "",
+    "ds_division": 4
+  }
+},
+{
+  "model": "clients.diagnosistype",
+  "pk": 1,
+  "fields": {
+    "name": "Beta Thalassemia Major",
+    "short_name": "BTM",
+    "description": "",
+    "icd_code": null
+  }
+},
+{
+  "model": "clients.diagnosistype",
+  "pk": 2,
+  "fields": {
+    "name": "E Beta Thalassemia",
+    "short_name": "EBT",
+    "description": "",
+    "icd_code": null
+  }
+},
+{
+  "model": "clients.diagnosistype",
+  "pk": 3,
+  "fields": {
+    "name": "Sickle Cell disease",
+    "short_name": "SCD",
+    "description": "",
+    "icd_code": null
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.615Z",
+    "updated_at": "2026-09-30T02:09:55.377Z",
+    "name": "National Thalassemia Center Laboratory",
+    "code": "NTC",
+    "contact_number": null,
+    "notes": ""
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.620Z",
+    "updated_at": "2026-09-30T02:09:11.547Z",
+    "name": "Teaching Hospital Kandy Laboratory",
+    "code": "TH-Kandy",
+    "contact_number": null,
+    "notes": ""
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.621Z",
+    "updated_at": "2026-09-30T02:02:30.621Z",
+    "name": "District General Hospital Chilaw",
+    "code": "DGH-CH",
+    "contact_number": null,
+    "notes": null
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.622Z",
+    "updated_at": "2026-09-30T02:02:30.622Z",
+    "name": "Colombo North Teaching Hospital Ragama",
+    "code": "CNTH-RAG",
+    "contact_number": null,
+    "notes": null
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.624Z",
+    "updated_at": "2026-09-30T02:09:42.399Z",
+    "name": "TH Kurunegala",
+    "code": "TH-Kuru",
+    "contact_number": null,
+    "notes": ""
+  }
+},
+{
+  "model": "clients.laboratory",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-09-30T02:02:30.625Z",
+    "updated_at": "2026-09-30T02:02:30.625Z",
+    "name": "Lanka Hospitals Laboratory",
+    "code": "LH-LAB",
+    "contact_number": null,
+    "notes": null
+  }
+},
+{
+  "model": "clients.drugname",
+  "pk": 1,
+  "fields": {
+    "name": "DFX",
+    "dose": "1600",
+    "regimen": "Daily",
+    "is_active": true
+  }
+},
+{
+  "model": "clients.drugname",
+  "pk": 2,
+  "fields": {
+    "name": "DFO",
+    "dose": "1500",
+    "regimen": "Daily",
+    "is_active": true
+  }
+},
+{
+  "model": "clients.drugname",
+  "pk": 3,
+  "fields": {
+    "name": "Vitamin C",
+    "dose": "1 tab",
+    "regimen": "Daily",
+    "is_active": true
+  }
+},
+{
+  "model": "clients.complicationtype",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-08-02T02:25:22.507Z",
+    "updated_at": "2026-08-02T02:25:22.507Z",
+    "name": "Diabetes Melitus",
+    "description": ""
+  }
+},
+{
+  "model": "clients.complicationtype",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-08-02T02:25:32.156Z",
+    "updated_at": "2026-08-02T02:25:32.156Z",
+    "name": "Cholelithiasis",
+    "description": ""
+  }
+},
+{
+  "model": "clients.complicationtype",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-08-02T02:25:41.340Z",
+    "updated_at": "2026-08-02T02:25:41.340Z",
+    "name": "Iron Overload",
+    "description": ""
+  }
+},
+{
+  "model": "clients.complicationtype",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-08-02T02:25:52.900Z",
+    "updated_at": "2026-08-02T02:25:52.900Z",
+    "name": "Hypothyroidism",
+    "description": ""
+  }
+},
+{
+  "model": "clients.complicationtype",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-08-02T02:26:07.518Z",
+    "updated_at": "2026-08-02T02:26:07.519Z",
+    "name": "Aplastic Crisis",
+    "description": ""
+  }
+}
+]
