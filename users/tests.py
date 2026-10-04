@@ -368,7 +368,8 @@ class PermissionsModuleTests(TestCase):
         from users.permissions import can_user_edit_entry
         from django.utils import timezone
 
-        # Entry created right now
+        # Entry created right now with recent date of admission
+        self.admission.date_of_admission = timezone.localdate()
         self.admission.created_at = timezone.now()
         self.admission.save()
 

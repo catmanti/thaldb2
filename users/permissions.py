@@ -150,12 +150,20 @@ def can_user_edit_entry(user: User, entry, window_hours: int = 48) -> bool:
     # 1. Check clinical event date (date_of_transfusion, date_of_admission, date_done)
     event_date = getattr(entry, "date_done", None) or getattr(entry, "date_of_admission", None) or getattr(entry, "date_of_transfusion", None)
     if event_date:
+        if isinstance(event_date, str):
+            try:
+                event_date = datetime.date.fromisoformat(event_date)
+            except ValueError:
+                event_date = None
+
         if isinstance(event_date, datetime.date) and not isinstance(event_date, datetime.datetime):
             event_dt = timezone.make_aware(datetime.datetime.combine(event_date, datetime.time.max))
+        elif isinstance(event_date, datetime.datetime):
+            event_dt = event_date if timezone.is_aware(event_date) else timezone.make_aware(event_date)
         else:
-            event_dt = event_date
+            event_dt = None
 
-        if event_dt < cutoff:
+        if event_dt and event_dt < cutoff:
             return False
 
     # 2. Check database creation timestamp
