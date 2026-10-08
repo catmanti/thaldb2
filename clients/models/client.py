@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import ClassVar
 
 from dateutil.relativedelta import relativedelta
+from django.contrib.postgres.indexes import GinIndex
 from django.core.exceptions import ValidationError  # type: ignore[reportMissingModuleSource]
 from django.core.files.base import ContentFile
 from django.db import models
@@ -159,6 +160,18 @@ class Client(models.Model):
 
     class Meta:
         ordering = ["full_name"]
+        indexes = [
+            GinIndex(
+                name="client_full_name_trgm_idx",
+                fields=["full_name"],
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                name="client_common_name_trgm_idx",
+                fields=["common_name"],
+                opclasses=["gin_trgm_ops"],
+            ),
+        ]
 
 
 class ClientCareUnit(models.Model):
