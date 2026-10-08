@@ -98,10 +98,12 @@ Investigation Types
     Hb
     WBC
     Platelet Count
+    Serum Ferritin
     TSH
-    FT4
-    Fasting Glucose
-    Post-Prandial Glucose
+    Free T4
+    FBS
+    PPBS
+    OGTT
     HbA1c
     Creatinine
     Bilirubin Total
@@ -109,6 +111,9 @@ Investigation Types
     Bilirubin Indirect
     ALT
     AST
+    ALP
+    Corrected Calcium
+    
 
 
     
