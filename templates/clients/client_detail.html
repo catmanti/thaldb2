@@ -46,6 +46,14 @@
                         {% if client.diagnosis %}
                         <span class="badge badge-info badge-outline font-semibold text-xs">{{ client.diagnosis.name }}</span>
                         {% endif %}
+                        {% if client.diagnosis_details %}
+                        <span class="badge badge-ghost text-xs font-mono" title="Genotype / Diagnosis Details">{{ client.diagnosis_details }}</span>
+                        {% endif %}
+                        {% if client.has_bmt %}
+                        <span class="badge badge-success text-xs font-semibold gap-1">
+                            <span>🌱</span> BMT Done
+                        </span>
+                        {% endif %}
                         {% if client.primary_care_unit %}
                         <span class="badge badge-secondary text-xs">Unit: {{ client.primary_care_unit.name }}</span>
                         {% endif %}
@@ -193,10 +201,37 @@
                         <span class="text-xs text-base-content/60 uppercase block">Iron Chelation Started</span>
                         <p class="font-medium">{{ client.date_iron_chelation_started|default:"N/A" }}</p>
                     </div>
+                    {% if client.diagnosis_details %}
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Genotype / Diagnosis Details</span>
+                        <p class="font-medium font-mono text-xs">{{ client.diagnosis_details }}</p>
+                    </div>
+                    {% endif %}
                     <div>
                         <span class="text-xs text-base-content/60 uppercase block">Transfusion Regimen</span>
                         <p class="font-medium">{{ client.transfusion_regimen|default:"N/A" }}</p>
                     </div>
+                    {% if client.bmt_records.exists %}
+                    <div class="p-3 rounded-xl bg-success/10 border border-success/20 space-y-2 mt-2">
+                        <span class="text-xs text-success font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <span>🌱</span> Bone Marrow Transplant
+                        </span>
+                        {% for bmt in client.bmt_records.all %}
+                        <div class="text-xs space-y-0.5 border-t border-success/20 pt-1.5 first:border-0 first:pt-0">
+                            <p class="font-semibold text-base-content">{{ bmt.date_of_bmt|date:"M d, Y" }} &bull; {{ bmt.institution_name }}</p>
+                            {% if bmt.donor_type %}
+                            <p class="text-base-content/70">Donor: {{ bmt.donor_type }}</p>
+                            {% endif %}
+                            <span class="badge {% if bmt.is_successful %}badge-success{% else %}badge-warning{% endif %} badge-xs">
+                                {% if bmt.is_successful %}Successful / Transfusion-Free{% else %}Graft Failure / Incomplete{% endif %}
+                            </span>
+                            {% if bmt.notes %}
+                            <p class="text-base-content/60 italic text-xs mt-1">{{ bmt.notes }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -12,4 +12,4 @@ Recommendation: Make admission optional (null=True, blank=True) and add a direct
 - Later in client model, transfusion_regimen should be auto calculated based on the pre_HB_level, hb_level_to_be_kept and duration in two transfusion cycle. 
 - add option to filter the currently avalilable staff to be added in the drop downs. Becouse some doctors and nurses can be transferred.
 - Correct the problem of be able to add transfusion date before the admission date. Which is currently happening
-- Auto remove the discharge outcome when the status is changed from Discharged to Active or Disgarge date changed from the date of discharge
+- Auto remove the discharge outcome when the status is changed from Discharged to Active or Discharge date changed from the date of discharge

@@ -494,4 +494,80 @@ class UnitScopedClientPermissionsTests(TestCase):
         self.assertTrue(can_user_edit_entry(self.sys_admin, transfusion))
 
 
+class ClientBMTTests(TestCase):
+    def setUp(self):
+        from clients.models import ClientCareUnit, ThalassemiaUnit
+
+        self.unit = ThalassemiaUnit.objects.create(name="Colombo Unit")
+        self.user = User.objects.create_user(email="doctor@colombo.lk", password="pass", primary_unit=self.unit)
+        self.client_obj = Client.objects.create(
+            registration_number="TH-BMT-001",
+            full_name="BMT Test Patient",
+            gender="M",
+            date_of_birth="2016-01-01",
+            diagnosis_details="IVS1-5 G>C homozygous",
+        )
+        ClientCareUnit.objects.create(
+            client=self.client_obj, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True
+        )
+
+    def test_client_bmt_and_has_bmt_property(self):
+        from clients.models import ClientBMT
+
+        # Initially client has no BMT
+        self.assertFalse(self.client_obj.has_bmt)
+        self.assertEqual(self.client_obj.bmt_records.count(), 0)
+
+        # Create first BMT record
+        bmt1 = ClientBMT.objects.create(
+            client=self.client_obj,
+            date_of_bmt="2024-05-10",
+            institution_name="Christian Medical College, Vellore",
+            donor_type="Matched Sibling (MSD)",
+            is_successful=True,
+            notes="Full donor chimerism achieved",
+        )
+
+        self.assertTrue(self.client_obj.has_bmt)
+        self.assertEqual(self.client_obj.bmt_records.count(), 1)
+        self.assertEqual(str(bmt1), f"BMT on 2024-05-10 - {self.client_obj.full_name}")
+
+        # Support multiple BMTs
+        bmt2 = ClientBMT.objects.create(
+            client=self.client_obj,
+            date_of_bmt="2025-06-15",
+            institution_name="Asiri Central Hospital",
+            donor_type="Haploidentical",
+            is_successful=True,
+        )
+
+        self.assertEqual(self.client_obj.bmt_records.count(), 2)
+        # Verify ordering is -date_of_bmt
+        records = list(self.client_obj.bmt_records.all())
+        self.assertEqual(records[0], bmt2)
+        self.assertEqual(records[1], bmt1)
+
+    def test_client_detail_renders_bmt_and_diagnosis_details(self):
+        from clients.models import ClientBMT
+
+        ClientBMT.objects.create(
+            client=self.client_obj,
+            date_of_bmt="2024-05-10",
+            institution_name="CMC Vellore",
+            donor_type="Matched Sibling",
+            is_successful=True,
+        )
+
+        self.client.force_login(self.user)
+        detail_url = reverse("clients:client-detail", kwargs={"pk": self.client_obj.pk})
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "IVS1-5 G&gt;C homozygous")
+        self.assertContains(response, "CMC Vellore")
+        self.assertContains(response, "Matched Sibling")
+        self.assertContains(response, "BMT Done")
+
+
+
 

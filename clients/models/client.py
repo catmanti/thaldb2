@@ -63,7 +63,13 @@ class Client(models.Model):
     diagnosis = models.ForeignKey(
         DiagnosisType, on_delete=models.SET_NULL, blank=True, null=True, related_name="clients"
     )
-
+    diagnosis_details = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Diagnosis Details / Genotype",
+        help_text="e.g. Genotype mutation (IVS1-5 G>C homozygous, Cd 41/42), or clinical variant notes",
+    )
     # --- Social details ---
     marital_status = models.ForeignKey(
         "Choice",
@@ -141,6 +147,11 @@ class Client(models.Model):
             .first()
         )
         return primary_link.unit if primary_link else None
+
+    @property
+    def has_bmt(self) -> bool:
+        """Returns True if the client has any recorded bone marrow transplant."""
+        return self.bmt_records.exists()
 
     def save(self, *args, **kwargs):
         # Auto-crop to center square 1:1 and resize uploaded photo to 400x400 JPEG
@@ -226,15 +237,52 @@ class ClientDeath(models.Model):
     """Stores client death details."""
 
     client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name="death_record")
-    date_of_death = models.DateField()
+    date_of_death = models.DateField(blank=True, null=True)
     cause_of_death = models.TextField(blank=True, null=True)
     postmortem_findings = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Death record: {self.client.full_name}"
+# -------------------------------------------------------------------
+#                      UNDERWENT BONE MARROW TRANSPLANT
+# -------------------------------------------------------------------
+class ClientBMT(models.Model):
+    """Stores client bone marrow transplant (HSCT) details."""
 
+    client = models.ForeignKey(
+        Client, on_delete=models.CASCADE, related_name="bmt_records"
+    )
+    date_of_bmt = models.DateField(blank=True, null=True, verbose_name="Date of BMT / HSCT")
+    is_successful = models.BooleanField(
+        default=True,
+        verbose_name="Transplant Successful / Transfusion Free",
+        help_text="True if patient achieved sustained donor engraftment",
+    )
+    institution_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Transplant Center / Hospital",
+    )
+    donor_type = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Donor Type",
+        help_text="e.g. Matched Sibling (MSD), Matched Unrelated (MUD), Haploidentical",
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-date_of_bmt"]
+        verbose_name = "Bone Marrow Transplant"
+        verbose_name_plural = "Bone Marrow Transplants"
+
+    def __str__(self):
+        return f"BMT on {self.date_of_bmt} - {self.client.full_name}"
 # -------------------------------------------------------------------
 #                      TRANSFER RECORD
 # -------------------------------------------------------------------

@@ -4,6 +4,7 @@ from .models import (
     Admission,
     Choice,
     Client,
+    ClientBMT,
     ClientCareUnit,
     ClientDeath,
     ClientTransfer,
@@ -35,6 +36,16 @@ class ClientDeathAdmin(admin.ModelAdmin):
     list_filter = ["date_of_death"]
     search_fields = ["client__full_name", "cause_of_death", "notes"]
     ordering = ["-date_of_death"]
+
+
+@admin.register(ClientBMT)
+class ClientBMTAdmin(admin.ModelAdmin):
+    """Admin for ClientBMT"""
+
+    list_display = ["client", "date_of_bmt", "institution_name", "donor_type", "is_successful"]
+    list_filter = ["is_successful", "date_of_bmt"]
+    search_fields = ["client__full_name", "institution_name", "donor_type", "notes"]
+    ordering = ["-date_of_bmt"]
 
 
 @admin.register(ClientTransfer)
@@ -121,6 +132,12 @@ class ClientCareUnitInline(admin.TabularInline):
     fields = ["unit", "role", "start_date", "end_date", "is_active", "notes"]
 
 
+class ClientBMTInline(admin.TabularInline):
+    model = ClientBMT
+    extra = 0
+    fields = ["date_of_bmt", "institution_name", "donor_type", "is_successful", "notes"]
+
+
 @admin.register(ClientCareUnit)
 class ClientCareUnitAdmin(admin.ModelAdmin):
     """Admin for ClientCareUnit"""
@@ -139,7 +156,7 @@ class ClientAdmin(admin.ModelAdmin):
     list_filter = ["gender", "blood_group", "diagnosis", "ethnicity", "care_units"]
     search_fields = ["registration_number", "full_name", "contact_number", "nic_number"]
     ordering = ["full_name"]
-    inlines = [ClientCareUnitInline]
+    inlines = [ClientCareUnitInline, ClientBMTInline]
 
     @admin.display(description="Primary Unit")
     def get_primary_unit(self, obj):
