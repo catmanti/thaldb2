@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from .models import (
     Admission,
+    Choice,
     Client,
     District,
     DS_Division,
@@ -142,22 +143,41 @@ class AdmissionForm(forms.ModelForm):
         fields = [
             "date_of_admission",
             "reason_for_admission",
+            "is_routine_day_transfusion",
             "date_of_discharge",
             "outcome",
             "notes",
         ]
         widgets = {
-            "date_of_admission": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "date_of_admission": forms.DateTimeInput(
+                attrs={"class": "input input-bordered w-full", "type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
             "reason_for_admission": forms.Select(attrs={"class": "select select-bordered w-full"}),
-            "date_of_discharge": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "is_routine_day_transfusion": forms.CheckboxInput(attrs={"class": "checkbox checkbox-primary"}),
+            "date_of_discharge": forms.DateTimeInput(
+                attrs={"class": "input input-bordered w-full", "type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
             "outcome": forms.TextInput(attrs={"class": "input input-bordered w-full", "placeholder": "Discharge status / outcome"}),
             "notes": forms.Textarea(attrs={"class": "textarea textarea-bordered w-full", "rows": 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.initial.get("date_of_admission") and not self.instance.pk:
-            self.initial["date_of_admission"] = timezone.localdate()
+        if not self.instance.pk:
+            if not self.initial.get("date_of_admission"):
+                self.initial["date_of_admission"] = timezone.localtime().strftime("%Y-%m-%dT%H:%M")
+            if not self.initial.get("reason_for_admission"):
+                bt_choice = Choice.objects.filter(category="admission_reason", name="Blood Transfusion").first()
+                if bt_choice:
+                    self.initial["reason_for_admission"] = bt_choice.pk
+                    self.initial["is_routine_day_transfusion"] = True
+        else:
+            if self.instance.date_of_admission:
+                self.initial["date_of_admission"] = timezone.localtime(self.instance.date_of_admission).strftime("%Y-%m-%dT%H:%M")
+            if self.instance.date_of_discharge:
+                self.initial["date_of_discharge"] = timezone.localtime(self.instance.date_of_discharge).strftime("%Y-%m-%dT%H:%M")
 
 
 class TransfusionForm(forms.ModelForm):
@@ -175,7 +195,10 @@ class TransfusionForm(forms.ModelForm):
             "remarks",
         ]
         widgets = {
-            "date_of_transfusion": forms.DateInput(attrs={"class": "input input-bordered w-full", "type": "date"}),
+            "date_of_transfusion": forms.DateTimeInput(
+                attrs={"class": "input input-bordered w-full", "type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
             "pre_HB_level": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "0.1", "placeholder": "9.0"}),
             "post_HB_level": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "0.1"}),
             "amount_of_blood": forms.NumberInput(attrs={"class": "input input-bordered w-full", "step": "10", "placeholder": "250"}),
@@ -186,10 +209,20 @@ class TransfusionForm(forms.ModelForm):
             "remarks": forms.Textarea(attrs={"class": "textarea textarea-bordered w-full", "rows": 3}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.initial.get("date_of_transfusion") and not self.instance.pk:
-            self.initial["date_of_transfusion"] = timezone.localdate()
+        if not self.instance.pk:
+            if not self.initial.get("date_of_transfusion"):
+                self.initial["date_of_transfusion"] = timezone.localtime().strftime("%Y-%m-%dT%H:%M")
+            if not self.initial.get("special_type"):
+                lrb_choice = Choice.objects.filter(category="special_blood_type", name="LRB").first()
+                if lrb_choice:
+                    self.initial["special_type"] = lrb_choice.pk
+            if user and not self.initial.get("checked_by"):
+                self.initial["checked_by"] = user.first_name or user.get_short_name() or user.username
+        else:
+            if self.instance.date_of_transfusion:
+                self.initial["date_of_transfusion"] = timezone.localtime(self.instance.date_of_transfusion).strftime("%Y-%m-%dT%H:%M")
 
 
 class InvestigationForm(forms.ModelForm):

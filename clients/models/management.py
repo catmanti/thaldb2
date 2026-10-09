@@ -1,5 +1,8 @@
+import datetime
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 from .client import Client
 
@@ -196,23 +199,48 @@ class Admission(TimeStampedModel):
     """HOSPITAL ADMISSIONS"""
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="client_admissions")
-    date_of_admission = models.DateField()
+    date_of_admission = models.DateTimeField(default=timezone.now)
     reason_for_admission = models.ForeignKey(
         "Choice",
         on_delete=models.SET_NULL,
         null=True,
         limit_choices_to={"category": "admission_reason"},
     )
-    date_of_discharge = models.DateField(blank=True, null=True)
+    date_of_discharge = models.DateTimeField(blank=True, null=True)
+    is_routine_day_transfusion = models.BooleanField(
+        default=False,
+        verbose_name="Routine Day Transfusion (Day-Care)",
+        help_text="If checked, automatically marks discharge upon recording transfusion completion.",
+    )
     outcome = models.CharField(max_length=200, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Admission on {self.date_of_admission} - {self.client.initials_with_last_name}"
+        adm_date_str = timezone.localtime(self.date_of_admission).strftime("%Y-%m-%d %H:%M") if self.date_of_admission else "N/A"
+        return f"Admission on {adm_date_str} - {self.client.initials_with_last_name}"
 
     def get_absolute_url(self):
         """Return the client detail URL after admission operations."""
         return reverse("clients:client-detail", kwargs={"pk": self.client.pk})
+
+    @property
+    def is_active(self):
+        return self.date_of_discharge is None
+
+    def clean(self):
+        super().clean()
+        if self.date_of_discharge and self.date_of_admission:
+            if self.date_of_discharge < self.date_of_admission:
+                raise ValidationError({
+                    "date_of_discharge": "Discharge date/time cannot be earlier than admission date/time."
+                })
+
+    def mark_discharged(self, discharge_time=None, outcome="Discharged"):
+        """Mark this admission as discharged."""
+        self.date_of_discharge = discharge_time or timezone.now()
+        if outcome and not self.outcome:
+            self.outcome = outcome
+        self.save(update_fields=["date_of_discharge", "outcome", "updated_at"])
 
 
 class Transfusion(TimeStampedModel):
@@ -220,7 +248,7 @@ class Transfusion(TimeStampedModel):
 
     # Client of the transfusion is the client of the admission
     admission = models.ForeignKey(Admission, on_delete=models.CASCADE, related_name="blood_transfusions")
-    date_of_transfusion = models.DateField()
+    date_of_transfusion = models.DateTimeField(default=timezone.now)
     pre_HB_level = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True, default=9.0)
     post_HB_level = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     WBC_count = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
@@ -235,7 +263,31 @@ class Transfusion(TimeStampedModel):
     remarks = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Transfusion on {self.date_of_transfusion} - {self.admission.client.full_name}"
+        tr_date_str = timezone.localtime(self.date_of_transfusion).strftime("%Y-%m-%d %H:%M") if self.date_of_transfusion else "N/A"
+        return f"Transfusion on {tr_date_str} - {self.admission.client.full_name}"
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, "admission") and self.admission and self.date_of_transfusion:
+            adm = self.admission
+            if self.date_of_transfusion < adm.date_of_admission:
+                adm_str = timezone.localtime(adm.date_of_admission).strftime("%Y-%m-%d %H:%M")
+                raise ValidationError({
+                    "date_of_transfusion": f"Transfusion date/time cannot be earlier than admission ({adm_str})."
+                })
+            if adm.date_of_discharge:
+                if self.date_of_transfusion > adm.date_of_discharge:
+                    dis_str = timezone.localtime(adm.date_of_discharge).strftime("%Y-%m-%d %H:%M")
+                    raise ValidationError({
+                        "date_of_transfusion": f"Transfusion date/time cannot be after discharge ({dis_str})."
+                    })
+            else:
+                # Active admission: cannot be in the future (with 5 min grace period for clock drift)
+                now = timezone.now() + datetime.timedelta(minutes=5)
+                if self.date_of_transfusion > now:
+                    raise ValidationError({
+                        "date_of_transfusion": "Transfusion date/time cannot be in the future."
+                    })
 
 
 class ClinicVisit(TimeStampedModel):

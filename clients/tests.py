@@ -1,3 +1,4 @@
+import datetime
 from io import BytesIO
 from PIL import Image
 from django.contrib.auth import get_user_model
@@ -54,12 +55,16 @@ class AdmissionTransfusionWorkflowTests(TestCase):
     def test_admission_and_transfusion_creation(self):
         self.client.force_login(self.user)
 
+        now = timezone.localtime()
+        adm_time = (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M")
+        tr_time = (now - datetime.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M")
+
         # 1. Create Admission via HTMX POST
         create_adm_url = reverse("clients:admission-create", kwargs={"client_id": self.client_obj.pk})
         resp = self.client.post(
             create_adm_url,
             {
-                "date_of_admission": timezone.localdate(),
+                "date_of_admission": adm_time,
                 "reason_for_admission": self.reason_choice.pk,
                 "notes": "Routine transfusion admission",
             },
@@ -77,7 +82,7 @@ class AdmissionTransfusionWorkflowTests(TestCase):
         resp_tr = self.client.post(
             create_tr_url,
             {
-                "date_of_transfusion": timezone.localdate(),
+                "date_of_transfusion": tr_time,
                 "pre_HB_level": "8.5",
                 "post_HB_level": "11.2",
                 "amount_of_blood": "350",
@@ -92,6 +97,120 @@ class AdmissionTransfusionWorkflowTests(TestCase):
         transfusion = Transfusion.objects.first()
         self.assertEqual(transfusion.admission, admission)
         self.assertEqual(float(transfusion.pre_HB_level), 8.5)
+
+    def test_transfusion_timing_validation(self):
+        from django.core.exceptions import ValidationError
+
+        now = timezone.now()
+        adm = Admission.objects.create(
+            client=self.client_obj,
+            date_of_admission=now - datetime.timedelta(hours=4),
+            date_of_discharge=now - datetime.timedelta(hours=1),
+        )
+
+        # 1. Transfusion earlier than admission should fail
+        tr_early = Transfusion(
+            admission=adm,
+            date_of_transfusion=now - datetime.timedelta(hours=5),
+        )
+        with self.assertRaises(ValidationError):
+            tr_early.full_clean()
+
+        # 2. Transfusion later than discharge should fail
+        tr_late = Transfusion(
+            admission=adm,
+            date_of_transfusion=now,
+        )
+        with self.assertRaises(ValidationError):
+            tr_late.full_clean()
+
+        # 3. Transfusion within admission window succeeds
+        tr_valid = Transfusion(
+            admission=adm,
+            date_of_transfusion=now - datetime.timedelta(hours=2),
+        )
+        tr_valid.full_clean()  # should not raise
+
+    def test_routine_day_transfusion_auto_discharges(self):
+        self.client.force_login(self.user)
+        now = timezone.localtime()
+
+        # Create day-care admission
+        adm = Admission.objects.create(
+            client=self.client_obj,
+            date_of_admission=now - datetime.timedelta(hours=3),
+            is_routine_day_transfusion=True,
+            reason_for_admission=self.reason_choice,
+        )
+        self.assertIsNone(adm.date_of_discharge)
+
+        # Log transfusion under this day-care admission
+        create_tr_url = reverse("clients:transfusion-create", kwargs={"admission_id": adm.pk})
+        tr_time = (now - datetime.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M")
+        resp = self.client.post(
+            create_tr_url,
+            {
+                "date_of_transfusion": tr_time,
+                "amount_of_blood": "250",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        # Admission should now be auto-discharged!
+        adm.refresh_from_db()
+        self.assertIsNotNone(adm.date_of_discharge)
+        self.assertIn("Routine Day-Care", adm.outcome)
+
+    def test_close_previous_admission_strategy(self):
+        self.client.force_login(self.user)
+        now = timezone.localtime()
+
+        # Existing unclosed admission from 5 days ago
+        old_adm = Admission.objects.create(
+            client=self.client_obj,
+            date_of_admission=now - datetime.timedelta(days=5),
+            reason_for_admission=self.reason_choice,
+        )
+        self.assertIsNone(old_adm.date_of_discharge)
+
+        # Create new admission with close_previous_admission=true
+        create_adm_url = reverse("clients:admission-create", kwargs={"client_id": self.client_obj.pk})
+        new_adm_time = now.strftime("%Y-%m-%dT%H:%M")
+        resp = self.client.post(
+            create_adm_url,
+            {
+                "date_of_admission": new_adm_time,
+                "reason_for_admission": self.reason_choice.pk,
+                "close_previous_admission": "true",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        old_adm.refresh_from_db()
+        self.assertIsNotNone(old_adm.date_of_discharge)
+        self.assertIn("Closed upon new admission", old_adm.outcome)
+
+    def test_quick_discharge_endpoint(self):
+        self.client.force_login(self.user)
+        now = timezone.now()
+
+        adm = Admission.objects.create(
+            client=self.client_obj,
+            date_of_admission=now - datetime.timedelta(hours=2),
+            reason_for_admission=self.reason_choice,
+        )
+        self.assertIsNone(adm.date_of_discharge)
+
+        discharge_url = reverse("clients:admission-discharge", kwargs={"pk": adm.pk})
+        resp = self.client.post(discharge_url, HTTP_HX_REQUEST="true")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get("HX-Trigger"), "reloadAdmissions")
+
+        adm.refresh_from_db()
+        self.assertIsNotNone(adm.date_of_discharge)
+        self.assertEqual(adm.outcome, "Discharged via Quick-Action")
 
 
 class InvestigationWorkflowTests(TestCase):
@@ -334,10 +453,10 @@ class UnitScopedClientPermissionsTests(TestCase):
         # Create an admission older than 48 hours
         old_admission = Admission.objects.create(
             client=self.client_a,
-            date_of_admission=timezone.now().date() - timezone.timedelta(days=5),
+            date_of_admission=timezone.now() - datetime.timedelta(days=5),
         )
         Admission.objects.filter(pk=old_admission.pk).update(
-            created_at=timezone.now() - timezone.timedelta(hours=120)
+            created_at=timezone.now() - datetime.timedelta(hours=120)
         )
         self.client.force_login(self.nurse_a)
 
@@ -356,14 +475,16 @@ class UnitScopedClientPermissionsTests(TestCase):
         from users.permissions import can_user_edit_entry
         import datetime
 
-        # Create admission and a historical transfusion with date_of_transfusion = 2026-01-01
+        # Create admission and a historical transfusion with timezone-aware datetime
+        adm_dt = timezone.make_aware(datetime.datetime(2026, 1, 1, 9, 0))
+        tr_dt = timezone.make_aware(datetime.datetime(2026, 1, 1, 11, 0))
         admission = Admission.objects.create(
             client=self.client_a,
-            date_of_admission=datetime.date(2026, 1, 1),
+            date_of_admission=adm_dt,
         )
         transfusion = Transfusion.objects.create(
             admission=admission,
-            date_of_transfusion=datetime.date(2026, 1, 1),
+            date_of_transfusion=tr_dt,
         )
 
         # Nurse A cannot edit historical transfusion even if created_at is today

@@ -87,7 +87,8 @@ class Client(models.Model):
     HB_level_at_diagnosis = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     date_first_transfused = models.DateField(blank=True, null=True)
     date_iron_chelation_started = models.DateField(blank=True, null=True)
-    transfusion_regimen = models.CharField(max_length=200, blank=True, null=True)
+    transfusion_regimen = models.CharField(max_length=200, blank=True, null=True) #better use integerfield for transfusion frequency in dates
+    # add hb_level_to_be_kept
     allergic_history = models.TextField(blank=True, null=True)
     special_note = models.TextField(blank=True, null=True)
 

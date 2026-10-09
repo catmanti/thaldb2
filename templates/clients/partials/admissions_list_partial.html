@@ -24,7 +24,10 @@
             <div class="p-4 rounded-xl bg-base-200/50 border border-base-300 space-y-2">
                 <div class="flex items-center justify-between text-xs font-bold">
                     <div class="flex items-center gap-2">
-                        <span class="text-primary">Admission: {{ adm.date_of_admission }}</span>
+                        <span class="text-primary">Admission: {{ adm.date_of_admission|date:"M d, Y H:i" }}</span>
+                        {% if adm.is_routine_day_transfusion %}
+                        <span class="badge badge-info badge-xs">Day-Care</span>
+                        {% endif %}
                         {% if adm|can_edit_entry:request.user %}
                         <button type="button" 
                                 hx-get="{% url 'clients:admission-update' adm.pk %}" 
@@ -40,12 +43,28 @@
                         </span>
                         {% endif %}
                     </div>
-                    <span class="badge badge-ghost badge-sm">
-                        {% if adm.date_of_discharge %}Discharged: {{ adm.date_of_discharge }}{% else %}Active / In-patient{% endif %}
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                        {% if adm.date_of_discharge %}
+                        <span class="badge badge-ghost badge-sm">
+                            Discharged: {{ adm.date_of_discharge|date:"M d, Y H:i" }}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-warning badge-sm font-semibold">Active In-Patient</span>
+                        {% if adm|can_edit_entry:request.user %}
+                        <button type="button" 
+                                hx-post="{% url 'clients:admission-discharge' adm.pk %}"
+                                hx-confirm="Discharge this patient at current time?"
+                                class="btn btn-outline btn-success btn-xs px-2 py-0 h-6 font-medium gap-1"
+                                title="One-click discharge patient at current time">
+                            <span>✓</span> Discharge Now
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
                 <p class="text-xs text-base-content/80">
                     <strong>Reason:</strong> {{ adm.reason_for_admission.name|default:adm.reason_for_admission|default:"N/A" }}
+                    {% if adm.outcome %}<span class="text-success font-medium ml-2">[{{ adm.outcome }}]</span>{% endif %}
                     {% if adm.notes %}<span class="text-base-content/60 ml-2">({{ adm.notes }})</span>{% endif %}
                 </p>
 
@@ -68,7 +87,7 @@
                     <div class="space-y-1">
                         {% for tr in adm.blood_transfusions.all %}
                         <div class="text-xs flex flex-wrap items-center justify-between bg-base-100 p-2 rounded border border-base-200 gap-2">
-                            <span>Date: <strong>{{ tr.date_of_transfusion }}</strong></span>
+                            <span>Date & Time: <strong>{{ tr.date_of_transfusion|date:"M d, Y H:i" }}</strong></span>
                             <span>Pre-Hb: <strong>{{ tr.pre_HB_level|default:"--" }} g/dL</strong></span>
                             <span>Post-Hb: <strong>{{ tr.post_HB_level|default:"--" }} g/dL</strong></span>
                             <span>Amount: <strong>{{ tr.amount_of_blood|default:"--" }} mL</strong></span>

@@ -1,9 +1,10 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
@@ -288,6 +289,15 @@ class AdmissionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.client = self.client_obj
+        # Strategy B: If user opted to close previous unclosed admission, close it cleanly
+        if self.request.POST.get("close_previous_admission") in ("true", "on", "1"):
+            open_admissions = self.client_obj.client_admissions.filter(date_of_discharge__isnull=True)
+            for old_adm in open_admissions:
+                old_adm.mark_discharged(
+                    discharge_time=form.instance.date_of_admission,
+                    outcome="Closed upon new admission",
+                )
+
         admission = form.save()
         messages.success(self.request, f"Admission logged for {self.client_obj.full_name}.")
 
@@ -300,6 +310,11 @@ class AdmissionCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["client"] = self.client_obj
+        context["active_admission"] = (
+            self.client_obj.client_admissions.filter(date_of_discharge__isnull=True)
+            .order_by("-date_of_admission")
+            .first()
+        )
         context["modal_title"] = f"Log Admission - {self.client_obj.initials_with_last_name}"
         return context
 
@@ -337,6 +352,25 @@ class AdmissionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateVie
         return context
 
 
+@login_required
+def admission_discharge_view(request, pk):
+    """Quick-discharge an active admission."""
+    admission = get_object_or_404(Admission, pk=pk)
+    if not can_user_edit_entry(request.user, admission, window_hours=48):
+        raise PermissionDenied("You do not have permission to discharge this admission.")
+
+    if request.method == "POST":
+        admission.mark_discharged(outcome="Discharged via Quick-Action")
+        messages.success(request, f"Patient {admission.client.full_name} marked as discharged.")
+        if request.headers.get("HX-Request"):
+            response = HttpResponse("", status=200)
+            response["HX-Trigger"] = "reloadAdmissions"
+            return response
+        return redirect(admission.client.get_absolute_url())
+
+    return HttpResponse(status=405)
+
+
 class TransfusionCreateView(LoginRequiredMixin, CreateView):
     """Log a blood transfusion under a specific hospital admission."""
 
@@ -351,9 +385,23 @@ class TransfusionCreateView(LoginRequiredMixin, CreateView):
                 raise PermissionDenied("You do not have permission to log transfusions for clients outside your primary unit.")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.admission = self.admission_obj
         transfusion = form.save()
+
+        # Strategy C: Auto-discharge for routine day-care admissions upon transfusion recording
+        admission = self.admission_obj
+        if admission.is_routine_day_transfusion and admission.date_of_discharge is None:
+            admission.mark_discharged(
+                discharge_time=transfusion.date_of_transfusion,
+                outcome="Routine Day-Care Transfusion Completed",
+            )
+
         messages.success(self.request, "Blood transfusion logged successfully.")
 
         if self.request.headers.get("HX-Request"):
@@ -388,6 +436,11 @@ class TransfusionUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, UpdateV
                 return render(request, "clients/modals/permission_denied_modal.html", {"message": msg, "modal_title": "Editing Restricted"})
             raise PermissionDenied(msg)
         return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         transfusion = form.save()

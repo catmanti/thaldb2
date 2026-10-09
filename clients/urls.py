@@ -11,6 +11,7 @@ from .views import (
     InvestigationUpdateView,
     TransfusionCreateView,
     TransfusionUpdateView,
+    admission_discharge_view,
     client_admissions_partial_view,
     client_investigations_partial_view,
     load_districts_view,
@@ -28,6 +29,7 @@ urlpatterns = [
     path("<int:client_id>/admissions/create/", AdmissionCreateView.as_view(), name="admission-create"),
     path("<int:client_id>/admissions/partial/", client_admissions_partial_view, name="admissions-partial"),
     path("admissions/<int:pk>/edit/", AdmissionUpdateView.as_view(), name="admission-update"),
+    path("admissions/<int:pk>/discharge/", admission_discharge_view, name="admission-discharge"),
     path("admissions/<int:admission_id>/transfusions/create/", TransfusionCreateView.as_view(), name="transfusion-create"),
     path("transfusions/<int:pk>/edit/", TransfusionUpdateView.as_view(), name="transfusion-update"),
     # Investigations routes
