@@ -13,3 +13,7 @@ Recommendation: Make admission optional (null=True, blank=True) and add a direct
 - add option to filter the currently avalilable staff to be added in the drop downs. Becouse some doctors and nurses can be transferred.
 - Correct the problem of be able to add transfusion date before the admission date. Which is currently happening
 - Auto remove the discharge outcome when the status is changed from Discharged to Active or Discharge date changed from the date of discharge
+- When view clients in diceased view/Bone Marrow Transplant view and click Back to Directory takes to Active client view. It should take to Dicesed client/Bone Marrow Transplant view
+- Diganosis_detail should remove from the  <!-- Patient Header Banner -->  <!-- Main Info --> and add below the medical baseline (in Left side panel) 
+- In the same panel(discussed in the above line), add allergic_history, special_note and transfusion_regimen.
+- When a client is deceased instead of age, display the age at death.

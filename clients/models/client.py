@@ -136,17 +136,32 @@ class Client(models.Model):
             return initials
     @property
     def primary_care_unit(self):
+        """Returns the active primary care unit, or falls back to the most recent primary care unit."""
         if hasattr(self, "_prefetched_objects_cache") and "care_links" in self._prefetched_objects_cache:
+            # 1. Search for active primary unit first
             for link in self.care_links.all():
                 if link.is_active and link.role == ClientCareUnit.Role.PRIMARY:
                     return link.unit
+            # 2. Fall back to most recent primary unit
+            primary_links = [l for l in self.care_links.all() if l.role == ClientCareUnit.Role.PRIMARY]
+            if primary_links:
+                return primary_links[0].unit
             return None
+
         primary_link = (
-            self.care_links.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY)
+            self.care_links.filter(role=ClientCareUnit.Role.PRIMARY)
+            .order_by("-is_active", "-start_date", "-id")
             .select_related("unit")
             .first()
         )
         return primary_link.unit if primary_link else None
+
+    @property
+    def is_active_care(self) -> bool:
+        """Returns True if the client is currently receiving active care."""
+        if hasattr(self, "_prefetched_objects_cache") and "care_links" in self._prefetched_objects_cache:
+            return any(link.is_active for link in self.care_links.all())
+        return self.care_links.filter(is_active=True).exists()
 
     @property
     def has_bmt(self) -> bool:
@@ -204,8 +219,16 @@ class ClientCareUnit(models.Model):
         if self.end_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "End date cannot be earlier than start date."})
 
+        # Allow inactive primary care unit if client is deceased, post-BMT, or end_date is recorded
         if self.role == self.Role.PRIMARY and not self.is_active:
-            raise ValidationError({"is_active": "Primary care unit must be active."})
+            if not self.end_date and not (
+                hasattr(self, "client")
+                and (
+                    hasattr(self.client, "death_record")
+                    or (hasattr(self.client, "bmt_records") and self.client.bmt_records.filter(is_successful=True).exists())
+                )
+            ):
+                raise ValidationError({"is_active": "Primary care unit must be active unless patient is discharged, deceased, or post-BMT."})
 
     def __str__(self):
         return f"{self.client.registration_number} - {self.unit.name} ({self.role})"

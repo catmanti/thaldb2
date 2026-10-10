@@ -3,10 +3,12 @@ from django.urls import path
 from .views import (
     AdmissionCreateView,
     AdmissionUpdateView,
+    BMTClientListView,
     ClientCreateView,
     ClientDetailView,
     ClientListView,
     ClientUpdateView,
+    DeceasedClientListView,
     InvestigationCreateView,
     InvestigationUpdateView,
     TransfusionCreateView,
@@ -22,6 +24,8 @@ app_name = "clients"
 
 urlpatterns = [
     path("", ClientListView.as_view(), name="client-list"),
+    path("deceased/", DeceasedClientListView.as_view(), name="client-deceased-list"),
+    path("bmt/", BMTClientListView.as_view(), name="client-bmt-list"),
     path("create/", ClientCreateView.as_view(), name="client-create"),
     path("<int:pk>/", ClientDetailView.as_view(), name="client-detail"),
     path("<int:pk>/edit/", ClientUpdateView.as_view(), name="client-update"),

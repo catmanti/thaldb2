@@ -388,18 +388,19 @@ class Command(BaseCommand):
             if is_dead and dod and initial_start_date > dod:
                 initial_start_date = dod
 
+            should_be_active = not is_dead and not is_bmt
             care_link, created = ClientCareUnit.objects.get_or_create(
                 client=client,
                 unit=unit_obj,
                 defaults={
                     "role": ClientCareUnit.Role.PRIMARY,
-                    "is_active": not is_dead,
+                    "is_active": should_be_active,
                     "start_date": initial_start_date,
                     "end_date": dod if is_dead else None,
                 },
             )
             # If existed, update status and reconcile dates
-            care_link.is_active = not is_dead
+            care_link.is_active = should_be_active
             if is_dead and dod:
                 if care_link.start_date > dod:
                     care_link.start_date = dob if dob and dob <= dod else dod

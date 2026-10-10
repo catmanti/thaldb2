@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Deceased Patients Registry - ThalDB EMR{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header & Quick Info -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-base-300 pb-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-extrabold tracking-tight text-base-content">Deceased Patients Registry</h1>
+                <span class="badge badge-error badge-sm uppercase font-semibold">Mortality Records</span>
+            </div>
+            <p class="text-xs text-base-content/70 mt-1">Archived mortality register and clinical cause-of-death records.</p>
+        </div>
+        <a href="{% url 'clients:client-list' %}" class="btn btn-ghost btn-sm gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Active Directory
+        </a>
+    </div>
+
+    <!-- Search & Filter Form -->
+    <div class="card bg-base-100 shadow-md border border-base-300">
+        <div class="card-body p-4">
+            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                <!-- Search Query -->
+                <div class="form-control lg:col-span-2">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Search Patient / Cause</span></label>
+                    <input type="text" name="q" value="{{ query }}" placeholder="Search by Reg No, Name, NIC, or Cause of death..."
+                        class="input input-bordered input-sm w-full">
+                </div>
+
+                <!-- Diagnosis Filter -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Diagnosis</span></label>
+                    <select name="diagnosis" class="select select-bordered select-sm w-full">
+                        <option value="">All Diagnoses</option>
+                        {% for d in diagnoses %}
+                        <option value="{{ d.id }}" {% if selected_diagnosis == d.id|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Gender Filter -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Gender</span></label>
+                    <select name="gender" class="select select-bordered select-sm w-full">
+                        <option value="">All Genders</option>
+                        <option value="M" {% if selected_gender == "M" %}selected{% endif %}>Male</option>
+                        <option value="F" {% if selected_gender == "F" %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+
+                <!-- Submit / Clear Buttons -->
+                <div class="flex gap-2 sm:col-span-2 lg:col-span-4 justify-end pt-2">
+                    {% if query or selected_diagnosis or selected_gender %}
+                    <a href="{% url 'clients:client-deceased-list' %}" class="btn btn-ghost btn-sm">Clear Filters</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary btn-sm px-6">Filter Results</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deceased Directory Table -->
+    <div class="card bg-base-100 shadow-md border border-base-300 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full text-sm">
+                <thead class="bg-base-200 text-xs uppercase font-bold text-base-content/80">
+                    <tr>
+                        <th>Reg. No</th>
+                        <th>Patient Name</th>
+                        <th>Date of Death</th>
+                        <th>Cause of Death</th>
+                        <th>Diagnosis</th>
+                        <th>Last Primary Unit</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr class="hover">
+                        <td class="font-bold text-base-content/70 font-mono">{{ client.registration_number }}</td>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-base-300 text-base-content/60 rounded-full w-9 h-9 flex items-center justify-center">
+                                        <span class="font-bold uppercase text-xs">{{ client.full_name|slice:":1" }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{% url 'clients:client-detail' client.pk %}" class="font-bold hover:underline text-base-content">
+                                        {{ client.initials_with_last_name }}
+                                    </a>
+                                    {% if client.common_name %}
+                                    <p class="text-xs text-base-content/60">({{ client.common_name }})</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if client.death_record.date_of_death %}
+                            <span class="font-semibold text-error">{{ client.death_record.date_of_death|date:"M d, Y" }}</span>
+                            {% else %}
+                            <span class="text-base-content/50 italic">Date unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.death_record.cause_of_death %}
+                            <span class="badge badge-ghost badge-sm text-xs">{{ client.death_record.cause_of_death }}</span>
+                            {% elif client.death_record.notes %}
+                            <span class="text-xs text-base-content/60">{{ client.death_record.notes }}</span>
+                            {% else %}
+                            <span class="text-base-content/40 italic">Not recorded</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.diagnosis %}
+                            <span class="badge badge-info badge-outline font-medium text-xs">{{ client.diagnosis.short_name }}</span>
+                            {% else %}
+                            <span class="text-base-content/40 italic">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.primary_care_unit %}
+                            <span class="badge badge-ghost badge-outline text-xs">{{ client.primary_care_unit.name }}</span>
+                            {% else %}
+                            <span class="text-base-content/40 italic">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <a href="{% url 'clients:client-detail' client.pk %}" class="btn btn-ghost btn-xs text-primary" title="View Profile">
+                                View Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-base-content/60">
+                            <p class="font-semibold">No deceased patient records found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="p-4 border-t border-base-200 flex justify-center">
+            <div class="join">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_diagnosis %}&diagnosis={{ selected_diagnosis }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}" class="join-item btn btn-sm">«</a>
+                {% endif %}
+                <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_diagnosis %}&diagnosis={{ selected_diagnosis }}{% endif %}{% if selected_gender %}&gender={{ selected_gender }}{% endif %}" class="join-item btn btn-sm">»</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

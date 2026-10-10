@@ -569,5 +569,109 @@ class ClientBMTTests(TestCase):
         self.assertContains(response, "BMT Done")
 
 
+class DeceasedAndBMTRegistryTests(TestCase):
+    def setUp(self):
+        from clients.models import ClientBMT, ClientCareUnit, ClientDeath, ThalassemiaUnit
 
+        self.unit_a = ThalassemiaUnit.objects.create(name="Kurunegala TH")
+        self.unit_b = ThalassemiaUnit.objects.create(name="Ragama TH")
 
+        self.nurse_a = User.objects.create_user(
+            email="nurse_kuru@test.lk", password="pass", role=User.Role.NURSE, primary_unit=self.unit_a
+        )
+        self.admin_user = User.objects.create_user(
+            email="admin_health@test.lk", password="pass", role=User.Role.SYSTEM_ADMIN
+        )
+
+        # 1. Active Client in Kurunegala
+        self.active_client = Client.objects.create(
+            registration_number="TH-ACT-001", full_name="Active Patient", gender="M", date_of_birth="2015-01-01"
+        )
+        ClientCareUnit.objects.create(
+            client=self.active_client, unit=self.unit_a, role=ClientCareUnit.Role.PRIMARY, is_active=True
+        )
+
+        # 2. Deceased Client in Kurunegala
+        self.dead_client_a = Client.objects.create(
+            registration_number="TH-DEC-001", full_name="Deceased Patient Kurunegala", gender="M", date_of_birth="1990-01-01"
+        )
+        ClientDeath.objects.create(
+            client=self.dead_client_a, date_of_death="2020-05-15", cause_of_death="Heart Failure"
+        )
+        ClientCareUnit.objects.create(
+            client=self.dead_client_a, unit=self.unit_a, role=ClientCareUnit.Role.PRIMARY, is_active=False, start_date="2010-01-01", end_date="2020-05-15"
+        )
+
+        # 3. Deceased Client in Ragama
+        self.dead_client_b = Client.objects.create(
+            registration_number="TH-DEC-002", full_name="Deceased Patient Ragama", gender="F", date_of_birth="1992-01-01"
+        )
+        ClientDeath.objects.create(
+            client=self.dead_client_b, date_of_death="2021-08-20", cause_of_death="Sepsis"
+        )
+        ClientCareUnit.objects.create(
+            client=self.dead_client_b, unit=self.unit_b, role=ClientCareUnit.Role.PRIMARY, is_active=False, start_date="2012-01-01", end_date="2021-08-20"
+        )
+
+        # 4. BMT Client in Kurunegala
+        self.bmt_client = Client.objects.create(
+            registration_number="TH-BMT-002", full_name="Post BMT Patient", gender="M", date_of_birth="2010-06-01"
+        )
+        ClientBMT.objects.create(
+            client=self.bmt_client, date_of_bmt="2023-01-10", institution_name="CMC Vellore", is_successful=True
+        )
+        ClientCareUnit.objects.create(
+            client=self.bmt_client, unit=self.unit_a, role=ClientCareUnit.Role.PRIMARY, is_active=False, start_date="2015-01-01", end_date="2023-01-10"
+        )
+
+    def test_primary_care_unit_fallback_for_inactive_clients(self):
+        # Even though care link is inactive, primary_care_unit resolves to Kurunegala TH
+        self.assertEqual(self.dead_client_a.primary_care_unit, self.unit_a)
+        self.assertFalse(self.dead_client_a.is_active_care)
+
+        self.assertEqual(self.bmt_client.primary_care_unit, self.unit_a)
+        self.assertFalse(self.bmt_client.is_active_care)
+
+    def test_active_directory_excludes_inactive_and_deceased_and_bmt(self):
+        self.client.force_login(self.nurse_a)
+        response = self.client.get(reverse("clients:client-list"))
+        self.assertEqual(response.status_code, 200)
+        clients = response.context["clients"]
+        self.assertIn(self.active_client, clients)
+        self.assertNotIn(self.dead_client_a, clients)
+        self.assertNotIn(self.bmt_client, clients)
+
+    def test_deceased_registry_unit_scoping(self):
+        # Nurse A should only see deceased client in Kurunegala
+        self.client.force_login(self.nurse_a)
+        response = self.client.get(reverse("clients:client-deceased-list"))
+        self.assertEqual(response.status_code, 200)
+        clients = response.context["clients"]
+        self.assertIn(self.dead_client_a, clients)
+        self.assertNotIn(self.dead_client_b, clients)
+        self.assertNotIn(self.active_client, clients)
+
+        # Admin sees both deceased clients
+        self.client.force_login(self.admin_user)
+        resp_admin = self.client.get(reverse("clients:client-deceased-list"))
+        self.assertEqual(resp_admin.status_code, 200)
+        admin_clients = resp_admin.context["clients"]
+        self.assertIn(self.dead_client_a, admin_clients)
+        self.assertIn(self.dead_client_b, admin_clients)
+
+    def test_bmt_registry_listing(self):
+        self.client.force_login(self.nurse_a)
+        response = self.client.get(reverse("clients:client-bmt-list"))
+        self.assertEqual(response.status_code, 200)
+        clients = response.context["clients"]
+        self.assertIn(self.bmt_client, clients)
+        self.assertNotIn(self.active_client, clients)
+        self.assertNotIn(self.dead_client_a, clients)
+
+    def test_detail_view_accessible_for_inactive_unit_client(self):
+        # Nurse A can view profile of deceased patient from Kurunegala
+        self.client.force_login(self.nurse_a)
+        resp = self.client.get(reverse("clients:client-detail", kwargs={"pk": self.dead_client_a.pk}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Deceased")
+        self.assertContains(resp, "Kurunegala TH")

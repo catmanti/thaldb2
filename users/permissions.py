@@ -98,7 +98,7 @@ class UnitScopedClientPermissionMixin(UserPassesTestMixin):
             return qs
 
         if user.primary_unit:
-            return qs.filter(care_links__unit=user.primary_unit, care_links__is_active=True).distinct()
+            return qs.filter(care_links__unit=user.primary_unit).distinct()
 
         return qs.none()
 
@@ -117,7 +117,7 @@ class UnitScopedClientPermissionMixin(UserPassesTestMixin):
         if hasattr(self, "get_object"):
             try:
                 client = self.get_object()
-                return client.care_links.filter(unit=user.primary_unit, is_active=True).exists()
+                return client.care_links.filter(unit=user.primary_unit).exists()
             except Exception:
                 pass
 

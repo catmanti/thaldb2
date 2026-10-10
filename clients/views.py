@@ -57,6 +57,8 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
         queryset = (
             super()
             .get_queryset()
+            .filter(care_links__is_active=True)
+            .distinct()
             .select_related("diagnosis", "ds_division")
             .prefetch_related(active_care_units_prefetch)
         )
@@ -92,6 +94,125 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
         return context
 
 
+class DeceasedClientListView(LoginRequiredMixin, ListView):
+    """Deceased Patients Registry (Scoped to User's Primary Unit for hospital staff)."""
+
+    model = Client
+    template_name = "clients/client_deceased_list.html"
+    context_object_name = "clients"
+    paginate_by = 15
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = (
+            Client.objects.filter(death_record__isnull=False)
+            .select_related("diagnosis", "ds_division", "death_record")
+            .prefetch_related(
+                models.Prefetch(
+                    "care_links",
+                    queryset=ClientCareUnit.objects.select_related("unit").order_by("-is_active", "-start_date"),
+                )
+            )
+        )
+        if not (user.is_system_admin or user.is_superuser):
+            if user.primary_unit:
+                queryset = queryset.filter(care_links__unit=user.primary_unit).distinct()
+            else:
+                return Client.objects.none()
+
+        q = self.request.GET.get("q", "").strip()
+        diagnosis_id = self.request.GET.get("diagnosis")
+        gender = self.request.GET.get("gender")
+
+        if q:
+            queryset = queryset.filter(
+                models.Q(registration_number__icontains=q)
+                | models.Q(full_name__icontains=q)
+                | models.Q(common_name__icontains=q)
+                | models.Q(nic_number__icontains=q)
+                | models.Q(death_record__cause_of_death__icontains=q)
+            )
+
+        if diagnosis_id:
+            queryset = queryset.filter(diagnosis_id=diagnosis_id)
+
+        if gender:
+            queryset = queryset.filter(gender=gender)
+
+        return queryset.order_by("-death_record__date_of_death", "-id")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import DiagnosisType
+
+        context["query"] = self.request.GET.get("q", "")
+        context["selected_diagnosis"] = self.request.GET.get("diagnosis", "")
+        context["selected_gender"] = self.request.GET.get("gender", "")
+        context["diagnoses"] = DiagnosisType.objects.all()
+        return context
+
+
+class BMTClientListView(LoginRequiredMixin, ListView):
+    """Bone Marrow Transplant Patients Registry (Scoped to User's Primary Unit for hospital staff)."""
+
+    model = Client
+    template_name = "clients/client_bmt_list.html"
+    context_object_name = "clients"
+    paginate_by = 15
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = (
+            Client.objects.filter(bmt_records__isnull=False)
+            .distinct()
+            .select_related("diagnosis", "ds_division")
+            .prefetch_related(
+                "bmt_records",
+                models.Prefetch(
+                    "care_links",
+                    queryset=ClientCareUnit.objects.select_related("unit").order_by("-is_active", "-start_date"),
+                ),
+            )
+        )
+        if not (user.is_system_admin or user.is_superuser):
+            if user.primary_unit:
+                queryset = queryset.filter(care_links__unit=user.primary_unit).distinct()
+            else:
+                return Client.objects.none()
+
+        q = self.request.GET.get("q", "").strip()
+        diagnosis_id = self.request.GET.get("diagnosis")
+        gender = self.request.GET.get("gender")
+
+        if q:
+            queryset = queryset.filter(
+                models.Q(registration_number__icontains=q)
+                | models.Q(full_name__icontains=q)
+                | models.Q(common_name__icontains=q)
+                | models.Q(nic_number__icontains=q)
+                | models.Q(bmt_records__institution_name__icontains=q)
+                | models.Q(bmt_records__donor_type__icontains=q)
+            )
+
+        if diagnosis_id:
+            queryset = queryset.filter(diagnosis_id=diagnosis_id)
+
+        if gender:
+            queryset = queryset.filter(gender=gender)
+
+        return queryset.order_by("-id")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import DiagnosisType
+
+        context["query"] = self.request.GET.get("q", "")
+        context["selected_diagnosis"] = self.request.GET.get("diagnosis", "")
+        context["selected_gender"] = self.request.GET.get("gender", "")
+        context["diagnoses"] = DiagnosisType.objects.all()
+        return context
+
+
 class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, DetailView):
     """Comprehensive Patient Profile View (Scoped to User's Primary Unit)."""
 
@@ -106,8 +227,8 @@ class ClientDetailView(LoginRequiredMixin, UnitScopedClientPermissionMixin, Deta
         context = super().get_context_data(**kwargs)
         client = self.object
 
-        # Fetch clinical care units with unit details
-        care_links = list(client.care_links.filter(is_active=True).select_related("unit"))
+        # Fetch clinical care units with unit details (active first, then historical)
+        care_links = list(client.care_links.select_related("unit").order_by("-is_active", "-start_date"))
         context["care_units"] = care_links
         # Cache on client instance so client.primary_care_unit does not trigger an extra DB query
         if not hasattr(client, "_prefetched_objects_cache"):

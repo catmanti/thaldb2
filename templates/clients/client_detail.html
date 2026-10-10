@@ -54,8 +54,15 @@
                             <span>🌱</span> BMT Done
                         </span>
                         {% endif %}
+                        {% if client.death_record %}
+                        <span class="badge badge-error text-xs font-semibold gap-1">
+                            Deceased ({{ client.death_record.date_of_death|date:"M d, Y"|default:"Date N/A" }})
+                        </span>
+                        {% endif %}
                         {% if client.primary_care_unit %}
-                        <span class="badge badge-secondary text-xs">Unit: {{ client.primary_care_unit.name }}</span>
+                        <span class="badge badge-secondary text-xs">
+                            Unit: {{ client.primary_care_unit.name }}{% if not client.is_active_care %} <span class="opacity-75 font-normal">(Inactive)</span>{% endif %}
+                        </span>
                         {% endif %}
                     </div>
 

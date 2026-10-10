@@ -34,9 +34,18 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
                         </svg>
                     </label>
-                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-56">
                         <li><a href="{% url 'dashboard' %}" class="font-medium">Dashboard</a></li>
-                        <li><a href="#" class="font-medium">Client Directory</a></li>
+                        <li>
+                            <details>
+                                <summary class="font-medium">Clients</summary>
+                                <ul>
+                                    <li><a href="{% url 'clients:client-list' %}">Active Patients</a></li>
+                                    <li><a href="{% url 'clients:client-deceased-list' %}">Deceased Registry</a></li>
+                                    <li><a href="{% url 'clients:client-bmt-list' %}">BMT Registry</a></li>
+                                </ul>
+                            </details>
+                        </li>
                         <li><a href="#" class="font-medium">Admissions</a></li>
                         <li><a href="#" class="font-medium">Transfusions</a></li>
                         <li><a href="#" class="font-medium">Clinic Visits</a></li>
@@ -59,7 +68,16 @@
             <div class="navbar-center hidden lg:flex">
                 <ul class="menu menu-horizontal px-1 gap-1 font-medium">
                     <li><a href="{% url 'dashboard' %}" class="rounded-lg">Dashboard</a></li>
-                    <li><a href="#" class="rounded-lg">Clients</a></li>
+                    <li>
+                        <details>
+                            <summary class="rounded-lg">Clients</summary>
+                            <ul class="p-2 bg-base-100 rounded-box shadow-lg w-48 z-[20] border border-base-200">
+                                <li><a href="{% url 'clients:client-list' %}" class="text-sm">Active Patients</a></li>
+                                <li><a href="{% url 'clients:client-deceased-list' %}" class="text-sm">Deceased Registry</a></li>
+                                <li><a href="{% url 'clients:client-bmt-list' %}" class="text-sm">BMT Registry</a></li>
+                            </ul>
+                        </details>
+                    </li>
                     <li><a href="#" class="rounded-lg">Admissions</a></li>
                     <li><a href="#" class="rounded-lg">Transfusions</a></li>
                     <li><a href="#" class="rounded-lg">Clinic Visits</a></li>
