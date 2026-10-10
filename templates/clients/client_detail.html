@@ -64,6 +64,11 @@
                             Unit: {{ client.primary_care_unit.name }}{% if not client.is_active_care %} <span class="opacity-75 font-normal">(Inactive)</span>{% endif %}
                         </span>
                         {% endif %}
+                        {% if client.allergic_history %}
+                        <span class="badge badge-error text-xs font-semibold gap-1">
+                            <span>⚠️</span> Allergy Alert
+                        </span>
+                        {% endif %}
                     </div>
 
                     <h1 class="text-3xl font-extrabold text-base-content tracking-tight leading-tight">
@@ -77,7 +82,8 @@
                         <span>🩸 <strong>Blood:</strong> <span class="text-red-500 font-bold">{{ client.blood_group|default:"Unknown" }}</span></span>
                         <span>👤 <strong>Gender:</strong> {{ client.get_gender_display }}</span>
                         <span>🪪 <strong>NIC:</strong> {{ client.nic_number|default:"N/A" }}</span>
-                        <span>📞 <strong>Contact:</strong> {{ client.contact_number|default:"N/A" }}</span>
+                        <span>📞 <strong>Contact:</strong> {% if client.contact_number %}<a href="tel:{{ client.contact_number }}" class="hover:underline text-primary font-bold">{{ client.contact_number }}</a>{% else %}N/A{% endif %}</span>
+                        <span>📍 <strong>District:</strong> {{ client.ds_division.district.name|default:"N/A" }}</span>
                     </div>
                 </div>
             </div>
@@ -192,32 +198,78 @@
                 </div>
             </div>
 
-            <!-- Medical Summary Card -->
+            <!-- 2. Allergic History & Safety Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5 space-y-2 text-sm">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-error border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <span>⚠️</span> Allergic History & Safety
+                        </span>
+                        {% if client.allergic_history %}
+                        <span class="badge badge-error badge-xs font-semibold uppercase">Caution</span>
+                        {% else %}
+                        <span class="badge badge-success badge-xs font-semibold">NKDA</span>
+                        {% endif %}
+                    </h3>
+                    {% if client.allergic_history %}
+                    <div class="p-3 rounded-lg bg-error/10 border border-error/25 text-error text-xs space-y-1">
+                        <p class="font-bold flex items-center gap-1">
+                            <span>🚨</span> Documented Allergies / Reactions:
+                        </p>
+                        <p class="font-semibold text-base-content whitespace-pre-line">{{ client.allergic_history }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-base-content/70 italic flex items-center gap-1.5 py-1">
+                        <span class="text-success font-bold">✓</span> No known drug allergies (NKDA) recorded.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 3. Medical Baseline Card -->
             <div class="card bg-base-100 shadow border border-base-300">
                 <div class="card-body p-5 space-y-3 text-sm">
-                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2">Medical Baseline</h3>
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>🩺 Medical Baseline</span>
+                        {% if client.diagnosis %}
+                        <span class="badge badge-info badge-outline badge-xs font-mono font-semibold">{{ client.diagnosis.short_name|default:client.diagnosis.name }}</span>
+                        {% endif %}
+                    </h3>
                     <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Hb at Diagnosis</span>
-                        <p class="font-semibold">{{ client.HB_level_at_diagnosis|default:"N/A" }} g/dL</p>
-                    </div>
-                    <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Date First Transfused</span>
-                        <p class="font-medium">{{ client.date_first_transfused|default:"N/A" }}</p>
-                    </div>
-                    <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Iron Chelation Started</span>
-                        <p class="font-medium">{{ client.date_iron_chelation_started|default:"N/A" }}</p>
+                        <span class="text-xs text-base-content/60 uppercase block">Diagnosis</span>
+                        <p class="font-semibold text-base-content">{{ client.diagnosis.name|default:"Not specified" }}</p>
                     </div>
                     {% if client.diagnosis_details %}
                     <div>
-                        <span class="text-xs text-base-content/60 uppercase block">Genotype / Diagnosis Details</span>
-                        <p class="font-medium font-mono text-xs">{{ client.diagnosis_details }}</p>
+                        <span class="text-xs text-base-content/60 uppercase block">Genotype / Mutation Details</span>
+                        <p class="font-medium font-mono text-xs text-primary">{{ client.diagnosis_details }}</p>
                     </div>
                     {% endif %}
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Hb at Diagnosis</span>
+                            <p class="font-semibold">{{ client.HB_level_at_diagnosis|default:"N/A" }} g/dL</p>
+                        </div>
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Diagnosis Date</span>
+                            <p class="font-medium">{{ client.diagnosis_date|date:"Y"|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-base-content/60 uppercase block">First Transfused</span>
+                            <p class="font-medium">{{ client.date_first_transfused|default:"N/A" }}</p>
+                        </div>
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Chelation Started</span>
+                            <p class="font-medium">{{ client.date_iron_chelation_started|default:"N/A" }}</p>
+                        </div>
+                    </div>
                     <div>
                         <span class="text-xs text-base-content/60 uppercase block">Transfusion Regimen</span>
-                        <p class="font-medium">{{ client.transfusion_regimen|default:"N/A" }}</p>
+                        <p class="font-medium">{{ client.transfusion_regimen|default:"Standard Regimen" }}</p>
                     </div>
+
                     {% if client.bmt_records.exists %}
                     <div class="p-3 rounded-xl bg-success/10 border border-success/20 space-y-2 mt-2">
                         <span class="text-xs text-success font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -225,7 +277,7 @@
                         </span>
                         {% for bmt in client.bmt_records.all %}
                         <div class="text-xs space-y-0.5 border-t border-success/20 pt-1.5 first:border-0 first:pt-0">
-                            <p class="font-semibold text-base-content">{{ bmt.date_of_bmt|date:"M d, Y" }} &bull; {{ bmt.institution_name }}</p>
+                            <p class="font-semibold text-base-content">{{ bmt.date_of_bmt|date:"M d, Y"|default:"Date N/A" }} &bull; {{ bmt.institution_name|default:"Center N/A" }}</p>
                             {% if bmt.donor_type %}
                             <p class="text-base-content/70">Donor: {{ bmt.donor_type }}</p>
                             {% endif %}
@@ -239,6 +291,115 @@
                         {% endfor %}
                     </div>
                     {% endif %}
+
+                    {% if client.special_note %}
+                    <div class="border-t border-base-200 pt-2">
+                        <span class="text-xs text-base-content/60 uppercase block">Special Clinical Notes</span>
+                        <p class="text-xs text-base-content/80 whitespace-pre-line">{{ client.special_note }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 4. Contact, Social & Guardians Card -->
+            <div class="card bg-base-100 shadow border border-base-300">
+                <div class="card-body p-5 space-y-3 text-sm">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-primary border-b border-base-200 pb-2 flex items-center justify-between">
+                        <span>📇 Contact, Social & Guardians</span>
+                    </h3>
+
+                    <!-- Residential Location -->
+                    <div>
+                        <span class="text-xs text-base-content/60 uppercase block">Address</span>
+                        <p class="font-medium text-xs text-base-content">{{ client.address|default:"Not recorded" }}</p>
+                        {% if client.ds_division %}
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            <span class="badge badge-ghost badge-xs">DS: {{ client.ds_division.name }}</span>
+                            {% if client.ds_division.district %}
+                            <span class="badge badge-ghost badge-xs">District: {{ client.ds_division.district.name }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Social & Demographics -->
+                    <div class="grid grid-cols-2 gap-2 text-xs border-t border-base-200 pt-2">
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Occupation</span>
+                            <p class="font-semibold">{{ client.occupation|default:"N/A" }}</p>
+                        </div>
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Marital Status</span>
+                            <p class="font-semibold">{{ client.marital_status.name|default:"N/A" }}</p>
+                        </div>
+                        <div>
+                            <span class="text-base-content/60 uppercase block">Ethnicity</span>
+                            <p class="font-semibold">{{ client.get_ethnicity_display|default:"N/A" }}</p>
+                        </div>
+                        <div>
+                            <span class="text-base-content/60 uppercase block">NIC Number</span>
+                            <p class="font-mono">{{ client.nic_number|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Direct Patient Contact -->
+                    <div class="border-t border-base-200 pt-2 text-xs space-y-1">
+                        <span class="text-base-content/60 uppercase block">Direct Contact</span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-base-content/70">Phone:</span>
+                            {% if client.contact_number %}
+                            <a href="tel:{{ client.contact_number }}" class="font-bold text-primary hover:underline flex items-center gap-1">
+                                <span>📞</span> {{ client.contact_number }}
+                            </a>
+                            {% else %}
+                            <span class="text-base-content/50">N/A</span>
+                            {% endif %}
+                        </div>
+                        {% if client.email %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-base-content/70">Email:</span>
+                            <a href="mailto:{{ client.email }}" class="text-primary hover:underline truncate max-w-[170px]" title="{{ client.email }}">
+                                {{ client.email }}
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Guardians / Emergency Contacts -->
+                    <div class="border-t border-base-200 pt-2 text-xs space-y-2">
+                        <span class="text-base-content/60 uppercase block font-bold">Guardians / Emergency Contacts</span>
+                        {% if client.guardian_name_1 or client.guardian_name_2 %}
+                            {% if client.guardian_name_1 %}
+                            <div class="p-2.5 rounded-lg bg-base-200/60 border border-base-300/80 space-y-1">
+                                <p class="font-bold text-base-content flex items-center justify-between">
+                                    <span>👤 {{ client.guardian_name_1 }}</span>
+                                    <span class="badge badge-ghost badge-xs">Primary</span>
+                                </p>
+                                {% if client.guardian_contact_number_1 %}
+                                <a href="tel:{{ client.guardian_contact_number_1 }}" class="btn btn-outline btn-primary btn-xs w-full gap-1 mt-1 font-mono">
+                                    <span>📞</span> Call: {{ client.guardian_contact_number_1 }}
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if client.guardian_name_2 %}
+                            <div class="p-2.5 rounded-lg bg-base-200/60 border border-base-300/80 space-y-1">
+                                <p class="font-bold text-base-content flex items-center justify-between">
+                                    <span>👤 {{ client.guardian_name_2 }}</span>
+                                    <span class="badge badge-ghost badge-xs">Secondary</span>
+                                </p>
+                                {% if client.guardian_contact_number_2 %}
+                                <a href="tel:{{ client.guardian_contact_number_2 }}" class="btn btn-outline btn-primary btn-xs w-full gap-1 mt-1 font-mono">
+                                    <span>📞</span> Call: {{ client.guardian_contact_number_2 }}
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% else %}
+                        <p class="text-xs text-base-content/50 italic">No guardian records documented.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
