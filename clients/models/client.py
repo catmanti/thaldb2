@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import ClassVar
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.core.exceptions import ValidationError  # type: ignore[reportMissingModuleSource]
 from django.core.files.base import ContentFile
@@ -168,6 +169,43 @@ class Client(models.Model):
         """Returns True if the client has any recorded bone marrow transplant."""
         return self.bmt_records.exists()
 
+    @property
+    def assigned_doctor(self):
+        """Returns the currently active assigned primary doctor for the patient's primary care unit."""
+        unit = self.primary_care_unit
+        if not unit:
+            return None
+        active_assignment = (
+            self.doctor_assignments.filter(care_unit=unit, valid_to__isnull=True)
+            .select_related("doctor")
+            .first()
+        )
+        return active_assignment.doctor if active_assignment else None
+
+    @property
+    def current_duty_doctor(self):
+        """Returns the assigned doctor, or the covering doctor if the assigned doctor is currently on leave."""
+        doctor = self.assigned_doctor
+        if not doctor:
+            return None
+
+        today = timezone.localdate()
+        coverage = (
+            doctor.leave_delegations.filter(start_date__lte=today, end_date__gte=today, is_active=True)
+            .select_related("covering_doctor")
+            .first()
+        )
+        return coverage.covering_doctor if coverage else doctor
+
+    @property
+    def is_doctor_on_leave(self) -> bool:
+        """Returns True if the assigned doctor is currently covered by another doctor due to leave."""
+        doctor = self.assigned_doctor
+        if not doctor:
+            return False
+        today = timezone.localdate()
+        return doctor.leave_delegations.filter(start_date__lte=today, end_date__gte=today, is_active=True).exists()
+
     def save(self, *args, **kwargs):
         # Auto-crop to center square 1:1 and resize uploaded photo to 400x400 JPEG
         if self.photo and hasattr(self.photo, "file"):
@@ -251,6 +289,116 @@ class ClientCareUnit(models.Model):
                 name="uniq_active_primary_unit_per_client",
             ),
         ]
+
+
+# -------------------------------------------------------------------
+#                   DOCTOR ASSIGNMENT & LEAVE COVERAGE
+# -------------------------------------------------------------------
+class ClientCareAssignment(models.Model):
+    """Tracks primary physician assignment history for a patient at a specific unit."""
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="doctor_assignments")
+    care_unit = models.ForeignKey(ThalassemiaUnit, on_delete=models.CASCADE, related_name="client_assignments")
+    doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="assigned_clients",
+        limit_choices_to={"role": "DOCTOR"},
+        verbose_name="Assigned Doctor",
+    )
+    valid_from = models.DateField(default=timezone.localdate, verbose_name="Assignment Start Date")
+    valid_to = models.DateField(blank=True, null=True, verbose_name="Assignment End Date")
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assignments_made",
+        verbose_name="Assigned By",
+    )
+    notes = models.TextField(blank=True, null=True, help_text="e.g. Initial triage, Transitioned from Pediatrics")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["client", "-valid_from", "-id"]
+        verbose_name = "Doctor Assignment"
+        verbose_name_plural = "Doctor Assignments"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(valid_to__isnull=True) | Q(valid_to__gte=F("valid_from")),
+                name="check_assignment_valid_to_after_from",
+            ),
+            models.UniqueConstraint(
+                fields=["client", "care_unit"],
+                condition=Q(valid_to__isnull=True),
+                name="uniq_active_doctor_per_client_unit",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.valid_to and self.valid_to < self.valid_from:
+            raise ValidationError({"valid_to": "End date (valid_to) cannot be earlier than start date (valid_from)."})
+
+    def close_assignment(self, end_date=None):
+        """Helper to close an active assignment before assigning a new doctor."""
+        self.valid_to = end_date or timezone.localdate()
+        self.save(update_fields=["valid_to", "updated_at"])
+
+    def __str__(self):
+        doc_name = self.doctor.get_full_name() or self.doctor.email
+        status_str = f"{self.valid_from} to Present" if not self.valid_to else f"{self.valid_from} to {self.valid_to}"
+        return f"{self.client.registration_number} -> Dr. {doc_name} ({status_str})"
+
+
+class DoctorCoverage(models.Model):
+    """Temporary clinical cross-coverage when a doctor is on leave or locum duty."""
+
+    care_unit = models.ForeignKey(ThalassemiaUnit, on_delete=models.CASCADE, related_name="doctor_coverages")
+    absent_doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="leave_delegations",
+        limit_choices_to={"role": "DOCTOR"},
+        verbose_name="Doctor on Leave",
+    )
+    covering_doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="covering_delegations",
+        limit_choices_to={"role": "DOCTOR"},
+        verbose_name="Covering Doctor",
+    )
+    start_date = models.DateField(default=timezone.localdate, verbose_name="Leave Start Date")
+    end_date = models.DateField(verbose_name="Leave End Date")
+    reason = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. Annual Leave, Medical Leave, Conference")
+    is_active = models.BooleanField(default=True, verbose_name="Coverage Active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-start_date", "-id"]
+        verbose_name = "Doctor Leave Coverage"
+        verbose_name_plural = "Doctor Leave Coverages"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(end_date__gte=F("start_date")),
+                name="check_doctor_coverage_end_after_start",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.absent_doctor_id and self.covering_doctor_id and self.absent_doctor_id == self.covering_doctor_id:
+            raise ValidationError({"covering_doctor": "Covering doctor cannot be the same as the doctor on leave."})
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "End date cannot be earlier than start date."})
+
+    def __str__(self):
+        absent_name = self.absent_doctor.get_full_name() or self.absent_doctor.email
+        covering_name = self.covering_doctor.get_full_name() or self.covering_doctor.email
+        return f"Dr. {covering_name} covering for Dr. {absent_name} ({self.start_date} to {self.end_date})"
 
 
 # -------------------------------------------------------------------

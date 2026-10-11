@@ -7,7 +7,19 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clients.models import Admission, Choice, Client, Investigation, InvestigationType, Laboratory, Transfusion
+from clients.models import (
+    Admission,
+    Choice,
+    Client,
+    ClientCareAssignment,
+    ClientCareUnit,
+    DoctorCoverage,
+    Investigation,
+    InvestigationType,
+    Laboratory,
+    ThalassemiaUnit,
+    Transfusion,
+)
 
 User = get_user_model()
 
@@ -675,3 +687,184 @@ class DeceasedAndBMTRegistryTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Deceased")
         self.assertContains(resp, "Kurunegala TH")
+
+
+class ClientCareAssignmentTests(TestCase):
+    def setUp(self):
+        from django.core.exceptions import ValidationError
+
+        self.ValidationError = ValidationError
+        self.unit = ThalassemiaUnit.objects.create(name="Kurunegala Centre")
+        self.doc_a = User.objects.create_user(
+            email="dr.a@hospital.lk",
+            password="pass",
+            first_name="Sunil",
+            last_name="Perera",
+            role=User.Role.DOCTOR,
+            primary_unit=self.unit,
+        )
+        self.doc_b = User.objects.create_user(
+            email="dr.b@hospital.lk",
+            password="pass",
+            first_name="Kamal",
+            last_name="Silva",
+            role=User.Role.DOCTOR,
+            primary_unit=self.unit,
+        )
+        self.doc_cover = User.objects.create_user(
+            email="dr.cover@hospital.lk",
+            password="pass",
+            first_name="Anura",
+            last_name="Fernando",
+            role=User.Role.DOCTOR,
+            primary_unit=self.unit,
+        )
+        self.admin_user = User.objects.create_user(
+            email="admin@hospital.lk",
+            password="pass",
+            role=User.Role.UNIT_ADMIN,
+            primary_unit=self.unit,
+        )
+
+        self.client_patient = Client.objects.create(
+            registration_number="TH-TEST-DOC-01",
+            full_name="Male Patient Test",
+            gender="M",
+            date_of_birth="2010-05-15",
+        )
+        ClientCareUnit.objects.create(
+            client=self.client_patient,
+            unit=self.unit,
+            role=ClientCareUnit.Role.PRIMARY,
+            is_active=True,
+        )
+
+    def test_client_doctor_assignment_lifecycle(self):
+        # 1. Assign Doctor A
+        assign1 = ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=datetime.date(2025, 1, 1),
+            assigned_by=self.admin_user,
+        )
+        self.assertEqual(self.client_patient.assigned_doctor, self.doc_a)
+        self.assertEqual(self.client_patient.current_duty_doctor, self.doc_a)
+        self.assertFalse(self.client_patient.is_doctor_on_leave)
+
+        # 2. Close assignment 1 and assign Doctor B
+        assign1.close_assignment(end_date=datetime.date(2025, 6, 30))
+        assign2 = ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_b,
+            valid_from=datetime.date(2025, 7, 1),
+            assigned_by=self.admin_user,
+        )
+        self.assertEqual(self.client_patient.assigned_doctor, self.doc_b)
+        self.assertEqual(self.client_patient.doctor_assignments.count(), 2)
+
+    def test_prevent_multiple_simultaneous_active_assignments(self):
+        from django.db import IntegrityError
+
+        ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=datetime.date(2025, 1, 1),
+        )
+
+        # Attempting a second active assignment without closing the first should violate unique constraint
+        with self.assertRaises(IntegrityError):
+            ClientCareAssignment.objects.create(
+                client=self.client_patient,
+                care_unit=self.unit,
+                doctor=self.doc_b,
+                valid_from=datetime.date(2025, 2, 1),
+            )
+
+    def test_doctor_leave_coverage_dynamic_resolution(self):
+        today = timezone.localdate()
+        ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=today - datetime.timedelta(days=30),
+        )
+
+        # Before coverage
+        self.assertEqual(self.client_patient.assigned_doctor, self.doc_a)
+        self.assertEqual(self.client_patient.current_duty_doctor, self.doc_a)
+        self.assertFalse(self.client_patient.is_doctor_on_leave)
+
+        # Doctor A goes on leave from yesterday to next week, covered by Doc Cover
+        coverage = DoctorCoverage.objects.create(
+            care_unit=self.unit,
+            absent_doctor=self.doc_a,
+            covering_doctor=self.doc_cover,
+            start_date=today - datetime.timedelta(days=2),
+            end_date=today + datetime.timedelta(days=5),
+            reason="Annual Leave",
+            is_active=True,
+        )
+
+        # Primary doctor remains Doc A, but duty doctor dynamically points to Doc Cover
+        self.assertEqual(self.client_patient.assigned_doctor, self.doc_a)
+        self.assertTrue(self.client_patient.is_doctor_on_leave)
+        self.assertEqual(self.client_patient.current_duty_doctor, self.doc_cover)
+
+        # If coverage is marked inactive, falls back to Doc A
+        coverage.is_active = False
+        coverage.save()
+        self.assertFalse(self.client_patient.is_doctor_on_leave)
+        self.assertEqual(self.client_patient.current_duty_doctor, self.doc_a)
+
+    def test_doctor_coverage_validation(self):
+        today = timezone.localdate()
+
+        # Cannot cover oneself
+        cov_self = DoctorCoverage(
+            care_unit=self.unit,
+            absent_doctor=self.doc_a,
+            covering_doctor=self.doc_a,
+            start_date=today,
+            end_date=today + datetime.timedelta(days=2),
+        )
+        with self.assertRaises(self.ValidationError):
+            cov_self.clean()
+
+        # End date cannot precede start date
+        cov_date = DoctorCoverage(
+            care_unit=self.unit,
+            absent_doctor=self.doc_a,
+            covering_doctor=self.doc_b,
+            start_date=today,
+            end_date=today - datetime.timedelta(days=1),
+        )
+        with self.assertRaises(self.ValidationError):
+            cov_date.clean()
+
+    def test_client_detail_view_renders_doctor_and_coverage(self):
+        today = timezone.localdate()
+        ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=today - datetime.timedelta(days=10),
+        )
+        DoctorCoverage.objects.create(
+            care_unit=self.unit,
+            absent_doctor=self.doc_a,
+            covering_doctor=self.doc_cover,
+            start_date=today - datetime.timedelta(days=1),
+            end_date=today + datetime.timedelta(days=3),
+            is_active=True,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("clients:client-detail", kwargs={"pk": self.client_patient.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Dr. Sunil Perera")
+        self.assertContains(response, "Covered")
+        self.assertContains(response, "Dr. Anura Fernando")
+

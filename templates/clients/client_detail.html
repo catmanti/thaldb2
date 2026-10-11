@@ -64,6 +64,14 @@
                             Unit: {{ client.primary_care_unit.name }}{% if not client.is_active_care %} <span class="opacity-75 font-normal">(Inactive)</span>{% endif %}
                         </span>
                         {% endif %}
+                        {% if client.assigned_doctor %}
+                        <span class="badge badge-accent text-xs font-semibold gap-1">
+                            👨‍⚕️ Dr. {{ client.assigned_doctor.get_full_name|default:client.assigned_doctor.email }}
+                            {% if client.is_doctor_on_leave %}
+                            <span class="badge badge-warning badge-xs ml-1 font-bold" title="Dr. {{ client.assigned_doctor.get_full_name|default:client.assigned_doctor.email }} is currently on leave">Covered by Dr. {{ client.current_duty_doctor.get_full_name|default:client.current_duty_doctor.email }}</span>
+                            {% endif %}
+                        </span>
+                        {% endif %}
                         {% if client.allergic_history %}
                         <span class="badge badge-error text-xs font-semibold gap-1">
                             <span>⚠️</span> Allergy Alert
@@ -84,6 +92,16 @@
                         <span>🪪 <strong>NIC:</strong> {{ client.nic_number|default:"N/A" }}</span>
                         <span>📞 <strong>Contact:</strong> {% if client.contact_number %}<a href="tel:{{ client.contact_number }}" class="hover:underline text-primary font-bold">{{ client.contact_number }}</a>{% else %}N/A{% endif %}</span>
                         <span>📍 <strong>District:</strong> {{ client.ds_division.district.name|default:"N/A" }}</span>
+                        <span>👨‍⚕️ <strong>Doctor:</strong> 
+                            {% if client.assigned_doctor %}
+                                Dr. {{ client.assigned_doctor.get_full_name|default:client.assigned_doctor.email }}
+                                {% if client.is_doctor_on_leave %}
+                                <span class="text-warning font-extrabold">(Covered: Dr. {{ client.current_duty_doctor.get_full_name|default:client.current_duty_doctor.email }})</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-base-content/50 italic font-normal">Unassigned</span>
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>

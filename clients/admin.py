@@ -1,10 +1,12 @@
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import (
     Admission,
     Choice,
     Client,
     ClientBMT,
+    ClientCareAssignment,
     ClientCareUnit,
     ClientDeath,
     ClientTransfer,
@@ -13,6 +15,7 @@ from .models import (
     ComplicationType,
     DiagnosisType,
     District,
+    DoctorCoverage,
     DS_Division,
     Drug,
     DrugName,
@@ -138,6 +141,12 @@ class ClientBMTInline(admin.TabularInline):
     fields = ["date_of_bmt", "institution_name", "donor_type", "is_successful", "notes"]
 
 
+class ClientCareAssignmentInline(admin.TabularInline):
+    model = ClientCareAssignment
+    extra = 0
+    fields = ["care_unit", "doctor", "valid_from", "valid_to", "assigned_by", "notes"]
+
+
 @admin.register(ClientCareUnit)
 class ClientCareUnitAdmin(admin.ModelAdmin):
     """Admin for ClientCareUnit"""
@@ -148,19 +157,84 @@ class ClientCareUnitAdmin(admin.ModelAdmin):
     ordering = ["client", "-is_active", "start_date"]
 
 
+@admin.register(ClientCareAssignment)
+class ClientCareAssignmentAdmin(admin.ModelAdmin):
+    """Admin for ClientCareAssignment"""
+
+    list_display = ["client", "doctor", "care_unit", "valid_from", "valid_to", "is_active_assignment"]
+    list_filter = ["care_unit", "doctor", "valid_from"]
+    search_fields = [
+        "client__full_name",
+        "client__registration_number",
+        "doctor__first_name",
+        "doctor__last_name",
+        "doctor__email",
+    ]
+    ordering = ["-valid_from", "-id"]
+
+    @admin.display(boolean=True, description="Active")
+    def is_active_assignment(self, obj):
+        return obj.valid_to is None
+
+
+@admin.register(DoctorCoverage)
+class DoctorCoverageAdmin(admin.ModelAdmin):
+    """Admin for DoctorCoverage"""
+
+    list_display = [
+        "absent_doctor",
+        "covering_doctor",
+        "care_unit",
+        "start_date",
+        "end_date",
+        "is_active",
+        "is_currently_covering",
+    ]
+    list_filter = ["care_unit", "is_active", "start_date"]
+    search_fields = [
+        "absent_doctor__first_name",
+        "absent_doctor__last_name",
+        "covering_doctor__first_name",
+        "covering_doctor__last_name",
+        "reason",
+    ]
+    ordering = ["-start_date", "-id"]
+
+    @admin.display(boolean=True, description="Active Today")
+    def is_currently_covering(self, obj):
+        today = timezone.localdate()
+        return obj.is_active and obj.start_date <= today <= obj.end_date
+
+
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
     """Admin for Client"""
 
-    list_display = ["registration_number", "full_name", "get_primary_unit", "date_of_birth", "gender", "contact_number", "diagnosis"]
+    list_display = [
+        "registration_number",
+        "full_name",
+        "get_primary_unit",
+        "get_assigned_doctor",
+        "date_of_birth",
+        "gender",
+        "contact_number",
+        "diagnosis",
+    ]
     list_filter = ["gender", "blood_group", "diagnosis", "ethnicity", "care_units"]
     search_fields = ["registration_number", "full_name", "contact_number", "nic_number"]
     ordering = ["full_name"]
-    inlines = [ClientCareUnitInline, ClientBMTInline]
+    inlines = [ClientCareUnitInline, ClientCareAssignmentInline, ClientBMTInline]
 
     @admin.display(description="Primary Unit")
     def get_primary_unit(self, obj):
         return obj.primary_care_unit or "-"
+
+    @admin.display(description="Doctor")
+    def get_assigned_doctor(self, obj):
+        doc = obj.assigned_doctor
+        if not doc:
+            return "-"
+        return f"Dr. {doc.get_full_name() or doc.email}"
 
 
 

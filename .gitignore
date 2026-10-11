@@ -21,6 +21,7 @@ yarn-error.log*
 # Databases
 *.db
 *.sqlite3
+db_backups/
 
 # Media uploads (keep directory, ignore uploaded files)
 media/*
@@ -36,3 +37,4 @@ media/*
 Thumbs.db
 .vscode/
 .idea/
+
