@@ -20,6 +20,7 @@ from clients.models import (
     ThalassemiaUnit,
     Transfusion,
 )
+from clients.utils import build_client_search_query, expand_phonetic_variants
 
 User = get_user_model()
 
@@ -1079,6 +1080,63 @@ class ClientCareAssignmentTests(TestCase):
         resp_invalid = self.client.get(reverse("clients:client-list"), {"page_size": "9999"})
         self.assertEqual(resp_invalid.status_code, 200)
         self.assertEqual(resp_invalid.context["page_size"], 50)
+
+    def test_sri_lankan_phonetic_search_equivalence(self):
+        # 1. Test expand_phonetic_variants function
+        vars_nawa = expand_phonetic_variants("nawa")
+        self.assertIn("nawa", vars_nawa)
+        self.assertIn("nava", vars_nawa)
+
+        vars_nava = expand_phonetic_variants("nava")
+        self.assertIn("nawa", vars_nava)
+        self.assertIn("nava", vars_nava)
+
+        vars_navaratna = expand_phonetic_variants("navaratna")
+        self.assertIn("navaratna", vars_navaratna)
+        self.assertIn("nawaratna", vars_navaratna)
+        self.assertIn("navarathna", vars_navaratna)
+        self.assertIn("nawarathna", vars_navaratna)
+
+        # 2. Database search equivalence in client directory view
+        # Create Patient with "w" spelling: Karunawathi
+        p_w = Client.objects.create(
+            registration_number="TH-PHONETIC-01",
+            full_name="A.B. Karunawathi",
+            gender="F",
+            date_of_birth="1990-01-01",
+        )
+        ClientCareUnit.objects.create(client=p_w, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        # Create Patient with "v" spelling: Navaratna
+        p_v = Client.objects.create(
+            registration_number="TH-PHONETIC-02",
+            full_name="Chamali Navaratna",
+            gender="F",
+            date_of_birth="1995-02-02",
+        )
+        ClientCareUnit.objects.create(client=p_v, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        self.client.force_login(self.admin_user)
+
+        # Searching "nawa" finds BOTH Karunawathi AND Navaratna
+        resp_nawa = self.client.get(reverse("clients:client-list"), {"q": "nawa", "doctor": "all"})
+        self.assertEqual(resp_nawa.status_code, 200)
+        results_nawa = list(resp_nawa.context["clients"])
+        self.assertIn(p_w, results_nawa)
+        self.assertIn(p_v, results_nawa)
+
+        # Searching "nava" ALSO finds BOTH Karunawathi AND Navaratna
+        resp_nava = self.client.get(reverse("clients:client-list"), {"q": "nava", "doctor": "all"})
+        self.assertEqual(resp_nava.status_code, 200)
+        results_nava = list(resp_nava.context["clients"])
+        self.assertIn(p_w, results_nava)
+        self.assertIn(p_v, results_nava)
+
+        # Searching "nawarathna" finds Navaratna
+        resp_nawarathna = self.client.get(reverse("clients:client-list"), {"q": "nawarathna", "doctor": "all"})
+        self.assertEqual(resp_nawarathna.status_code, 200)
+        self.assertIn(p_v, list(resp_nawarathna.context["clients"]))
+
 
 
 

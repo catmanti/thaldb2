@@ -24,6 +24,7 @@ from .models import (
     ThalassemiaUnit,
     Transfusion,
 )
+from .utils import build_client_search_query
 
 
 # -------------------------------------------------------------------
@@ -142,13 +143,7 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
         gender = self.request.GET.get("gender")
 
         if q:
-            queryset = queryset.filter(
-                models.Q(registration_number__icontains=q)
-                | models.Q(full_name__icontains=q)
-                | models.Q(common_name__icontains=q)
-                | models.Q(nic_number__icontains=q)
-                | models.Q(contact_number__icontains=q)
-            )
+            queryset = queryset.filter(build_client_search_query(q))
 
         if diagnosis_id:
             queryset = queryset.filter(diagnosis_id=diagnosis_id)
@@ -249,13 +244,7 @@ class DeceasedClientListView(LoginRequiredMixin, ListView):
         gender = self.request.GET.get("gender")
 
         if q:
-            queryset = queryset.filter(
-                models.Q(registration_number__icontains=q)
-                | models.Q(full_name__icontains=q)
-                | models.Q(common_name__icontains=q)
-                | models.Q(nic_number__icontains=q)
-                | models.Q(death_record__cause_of_death__icontains=q)
-            )
+            queryset = queryset.filter(build_client_search_query(q, extra_fields=["death_record__cause_of_death"]))
 
         if diagnosis_id:
             queryset = queryset.filter(diagnosis_id=diagnosis_id)
@@ -310,12 +299,9 @@ class BMTClientListView(LoginRequiredMixin, ListView):
 
         if q:
             queryset = queryset.filter(
-                models.Q(registration_number__icontains=q)
-                | models.Q(full_name__icontains=q)
-                | models.Q(common_name__icontains=q)
-                | models.Q(nic_number__icontains=q)
-                | models.Q(bmt_records__institution_name__icontains=q)
-                | models.Q(bmt_records__donor_type__icontains=q)
+                build_client_search_query(
+                    q, extra_fields=["bmt_records__institution_name", "bmt_records__donor_type"]
+                )
             )
 
         if diagnosis_id:
@@ -899,11 +885,7 @@ class CentreAdminAllocationView(UnitAdminRequiredMixin, ListView):
             qs = qs.filter(date_of_birth__lt=cutoff_18)
 
         if q:
-            qs = qs.filter(
-                models.Q(registration_number__icontains=q)
-                | models.Q(full_name__icontains=q)
-                | models.Q(nic_number__icontains=q)
-            )
+            qs = qs.filter(build_client_search_query(q))
 
         return qs.order_by("registration_number")
 
