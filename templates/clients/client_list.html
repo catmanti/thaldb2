@@ -4,29 +4,100 @@
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Header & Action Button -->
+    <!-- Header & Action Buttons -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-base-300 pb-4">
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight text-base-content">Client Directory</h1>
             <p class="text-xs text-base-content/70 mt-1">Search, filter, and manage registered Thalassemia patients.</p>
         </div>
-        <a href="{% url 'clients:client-create' %}" class="btn btn-primary gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Register Patient
+        <div class="flex flex-wrap items-center gap-2">
+            {% if request.user.is_unit_admin %}
+            <a href="{% url 'clients:centre-admin' %}" class="btn btn-outline btn-secondary btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Doctor Allocation Panel
+            </a>
+            {% endif %}
+            <a href="{% url 'clients:client-create' %}" class="btn btn-primary btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Register Patient
+            </a>
+        </div>
+    </div>
+
+    <!-- Doctor Caseload Quick Filter Tabs -->
+    <div class="flex flex-wrap gap-2 border-b border-base-200 pb-2">
+        {% if request.user.is_doctor %}
+        <a href="?doctor=me&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'me' %}btn-primary shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
+            <span>👨‍⚕️ My Patients</span>
+            <span class="badge {% if selected_doctor == 'me' %}badge-white text-primary font-bold{% else %}badge-ghost{% endif %} badge-xs">{{ my_patients_count }}</span>
         </a>
+
+        {% if has_covering_duty %}
+        <a href="?doctor=covering&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'covering' %}btn-warning text-warning-content shadow-sm{% else %}btn-ghost text-warning{% endif %} gap-1.5 text-xs">
+            <span>🔄 Covering Duty</span>
+            <span class="badge badge-warning badge-xs font-bold">{{ covering_patients_count }}</span>
+        </a>
+        {% endif %}
+
+        <a href="?doctor=all&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'all' %}btn-neutral shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
+            <span>🏥 All Centre Patients</span>
+            <span class="badge badge-ghost badge-xs">{{ all_patients_count }}</span>
+        </a>
+
+        <a href="?doctor=unassigned&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'unassigned' %}btn-error text-error-content shadow-sm{% else %}btn-ghost text-error{% endif %} gap-1.5 text-xs">
+            <span>⚠️ Unassigned</span>
+            <span class="badge {% if selected_doctor == 'unassigned' %}badge-white text-error font-bold{% else %}badge-error badge-outline{% endif %} badge-xs">{{ unassigned_patients_count }}</span>
+        </a>
+        {% else %}
+        <a href="?doctor=all&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'all' or not selected_doctor %}btn-primary shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
+            <span>🏥 All Centre Patients</span>
+            <span class="badge badge-ghost badge-xs">{{ all_patients_count }}</span>
+        </a>
+
+        <a href="?doctor=unassigned&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+            class="btn btn-sm {% if selected_doctor == 'unassigned' %}btn-error text-error-content shadow-sm{% else %}btn-ghost text-error{% endif %} gap-1.5 text-xs">
+            <span>⚠️ Unassigned</span>
+            <span class="badge {% if selected_doctor == 'unassigned' %}badge-white text-error font-bold{% else %}badge-error badge-outline{% endif %} badge-xs">{{ unassigned_patients_count }}</span>
+        </a>
+        {% endif %}
     </div>
 
     <!-- Search & Filter Form -->
     <div class="card bg-base-100 shadow-md border border-base-300">
         <div class="card-body p-4">
-            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
                 <!-- Search Query -->
                 <div class="form-control lg:col-span-2">
                     <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Search Patient</span></label>
                     <input type="text" name="q" value="{{ query }}" placeholder="Search by Reg No, Name, NIC, or Phone..."
                         class="input input-bordered input-sm w-full">
+                </div>
+
+                <!-- Doctor Filter -->
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Doctor</span></label>
+                    <select name="doctor" class="select select-bordered select-sm w-full">
+                        <option value="all" {% if selected_doctor == "all" %}selected{% endif %}>All Doctors</option>
+                        {% if request.user.is_doctor %}
+                        <option value="me" {% if selected_doctor == "me" %}selected{% endif %}>My Patients Only</option>
+                        {% if has_covering_duty %}
+                        <option value="covering" {% if selected_doctor == "covering" %}selected{% endif %}>Covering Duty Only</option>
+                        {% endif %}
+                        {% endif %}
+                        <option value="unassigned" {% if selected_doctor == "unassigned" %}selected{% endif %}>Unassigned Only</option>
+                        {% for doc in unit_doctors %}
+                        <option value="{{ doc.id }}" {% if selected_doctor == doc.id|stringformat:"s" %}selected{% endif %}>Dr. {{ doc.get_full_name|default:doc.email }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <!-- Diagnosis Filter -->
@@ -51,8 +122,8 @@
                 </div>
 
                 <!-- Submit / Clear Buttons -->
-                <div class="flex gap-2 sm:col-span-2 lg:col-span-4 justify-end pt-2">
-                    {% if query or selected_diagnosis or selected_gender %}
+                <div class="flex gap-2 sm:col-span-2 lg:col-span-5 justify-end pt-2">
+                    {% if query or selected_diagnosis or selected_gender or selected_doctor != "all" and selected_doctor != "me" %}
                     <a href="{% url 'clients:client-list' %}" class="btn btn-ghost btn-sm">Clear Filters</a>
                     {% endif %}
                     <button type="submit" class="btn btn-primary btn-sm px-6">Filter Results</button>
@@ -72,6 +143,7 @@
                         <th>Age</th>
                         <th>Gender</th>
                         <th>Diagnosis</th>
+                        <th>Doctor</th>
                         <th>Primary Unit</th>
                         <th>Contact</th>
                         <th class="text-right">Actions</th>
@@ -116,6 +188,22 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if client.assigned_doctor %}
+                            <div>
+                                <span class="badge badge-accent badge-outline text-xs font-semibold" title="Assigned Doctor: Dr. {{ client.assigned_doctor.get_full_name|default:client.assigned_doctor.email }}">
+                                    Dr. {{ client.assigned_doctor.last_name|default:client.assigned_doctor.first_name|default:client.assigned_doctor.email }}
+                                </span>
+                                {% if client.is_doctor_on_leave %}
+                                <span class="badge badge-warning badge-xs block mt-0.5" title="Doctor on leave. Covered today by Dr. {{ client.current_duty_doctor.get_full_name|default:client.current_duty_doctor.email }}">
+                                    Covered
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="text-base-content/40 italic text-xs">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if client.primary_care_unit %}
                             <span class="badge badge-info badge-outline">{{ client.primary_care_unit.name }}</span>
                             {% else %}
@@ -136,7 +224,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-8 text-base-content/60">
+                        <td colspan="9" class="text-center py-8 text-base-content/60">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -156,12 +244,12 @@
         <div class="p-4 border-t border-base-200 flex justify-center">
             <div class="join">
                 {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
                     class="join-item btn btn-sm">«</a>
                 {% endif %}
                 <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
                 {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
                     class="join-item btn btn-sm">»</a>
                 {% endif %}
             </div>

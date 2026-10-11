@@ -868,3 +868,193 @@ class ClientCareAssignmentTests(TestCase):
         self.assertContains(response, "Covered")
         self.assertContains(response, "Dr. Anura Fernando")
 
+    def test_client_directory_doctor_filtering_for_doctor(self):
+        # Patient 1 assigned to Doc A
+        ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=datetime.date(2025, 1, 1),
+        )
+
+        # Patient 2 assigned to Doc B
+        p2 = Client.objects.create(
+            registration_number="TH-TEST-DOC-02",
+            full_name="Female Patient Test",
+            gender="F",
+            date_of_birth="2012-03-20",
+        )
+        ClientCareUnit.objects.create(client=p2, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+        ClientCareAssignment.objects.create(
+            client=p2,
+            care_unit=self.unit,
+            doctor=self.doc_b,
+            valid_from=datetime.date(2025, 1, 1),
+        )
+
+        # Patient 3 is unassigned
+        p3 = Client.objects.create(
+            registration_number="TH-TEST-DOC-03",
+            full_name="Unassigned Patient",
+            gender="M",
+            date_of_birth="2016-07-10",
+        )
+        ClientCareUnit.objects.create(client=p3, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        # 1. Doc A logs in -> default list shows only Doc A's patients
+        self.client.force_login(self.doc_a)
+        resp = self.client.get(reverse("clients:client-list"))
+        self.assertEqual(resp.status_code, 200)
+        clients_in_view = list(resp.context["clients"])
+        self.assertIn(self.client_patient, clients_in_view)
+        self.assertNotIn(p2, clients_in_view)
+        self.assertNotIn(p3, clients_in_view)
+
+        # 2. Doc A views "All Patients"
+        resp_all = self.client.get(reverse("clients:client-list"), {"doctor": "all"})
+        self.assertEqual(resp_all.status_code, 200)
+        clients_all = list(resp_all.context["clients"])
+        self.assertIn(self.client_patient, clients_all)
+        self.assertIn(p2, clients_all)
+        self.assertIn(p3, clients_all)
+
+        # 3. Doc A views "Unassigned"
+        resp_unassigned = self.client.get(reverse("clients:client-list"), {"doctor": "unassigned"})
+        self.assertEqual(resp_unassigned.status_code, 200)
+        clients_unassigned = list(resp_unassigned.context["clients"])
+        self.assertNotIn(self.client_patient, clients_unassigned)
+        self.assertNotIn(p2, clients_unassigned)
+        self.assertIn(p3, clients_unassigned)
+
+    def test_client_directory_covering_duty_filter(self):
+        # Patient 1 assigned to Doc A
+        ClientCareAssignment.objects.create(
+            client=self.client_patient,
+            care_unit=self.unit,
+            doctor=self.doc_a,
+            valid_from=datetime.date(2025, 1, 1),
+        )
+
+        today = timezone.localdate()
+        # Doc A goes on leave, covered by Doc Cover
+        DoctorCoverage.objects.create(
+            care_unit=self.unit,
+            absent_doctor=self.doc_a,
+            covering_doctor=self.doc_cover,
+            start_date=today - datetime.timedelta(days=1),
+            end_date=today + datetime.timedelta(days=3),
+            is_active=True,
+        )
+
+        # Doc Cover logs in and checks covering duty tab
+        self.client.force_login(self.doc_cover)
+        resp_cover = self.client.get(reverse("clients:client-list"), {"doctor": "covering"})
+        self.assertEqual(resp_cover.status_code, 200)
+        self.assertIn(self.client_patient, resp_cover.context["clients"])
+
+    def test_centre_admin_allocation_panel_permissions_and_kpis(self):
+        # Non-admin user gets 403 Forbidden
+        self.client.force_login(self.doc_a)
+        resp_denied = self.client.get(reverse("clients:centre-admin"))
+        self.assertEqual(resp_denied.status_code, 403)
+
+        # Unit Admin gets 200 OK
+        self.client.force_login(self.admin_user)
+        resp_ok = self.client.get(reverse("clients:centre-admin"))
+        self.assertEqual(resp_ok.status_code, 200)
+        self.assertContains(resp_ok, "Doctor Allocation & Caseload")
+        self.assertContains(resp_ok, "Kurunegala Centre")
+
+    def test_centre_admin_batch_assign_doctor(self):
+        p1 = Client.objects.create(
+            registration_number="TH-BATCH-01",
+            full_name="Batch Patient 1",
+            gender="M",
+            date_of_birth="2014-01-01",
+        )
+        ClientCareUnit.objects.create(client=p1, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        p2 = Client.objects.create(
+            registration_number="TH-BATCH-02",
+            full_name="Batch Patient 2",
+            gender="F",
+            date_of_birth="2015-02-02",
+        )
+        ClientCareUnit.objects.create(client=p2, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        self.client.force_login(self.admin_user)
+        post_data = {
+            "action": "assign_doctor",
+            "unit_id": self.unit.id,
+            "target_doctor_id": self.doc_a.id,
+            "client_ids": [p1.id, p2.id],
+            "assignment_notes": "Assigned via batch tool",
+        }
+        resp = self.client.post(reverse("clients:centre-admin"), post_data)
+        self.assertEqual(resp.status_code, 302)
+
+        self.assertEqual(p1.assigned_doctor, self.doc_a)
+        self.assertEqual(p2.assigned_doctor, self.doc_a)
+
+    def test_centre_admin_smart_split_even_distribution(self):
+        clients = []
+        for i in range(4):
+            c = Client.objects.create(
+                registration_number=f"TH-SPLIT-{i+1:02d}",
+                full_name=f"Split Patient {i+1}",
+                gender="M",
+                date_of_birth="2016-01-01",
+            )
+            ClientCareUnit.objects.create(client=c, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+            clients.append(c)
+
+        self.client.force_login(self.admin_user)
+        post_data = {
+            "action": "smart_split",
+            "unit_id": self.unit.id,
+            "split_doctor_ids": [self.doc_a.id, self.doc_b.id],
+            "client_ids": [c.id for c in clients],
+        }
+        resp = self.client.post(reverse("clients:centre-admin"), post_data)
+        self.assertEqual(resp.status_code, 302)
+
+        doc_a_count = ClientCareAssignment.objects.filter(care_unit=self.unit, doctor=self.doc_a, valid_to__isnull=True).count()
+        doc_b_count = ClientCareAssignment.objects.filter(care_unit=self.unit, doctor=self.doc_b, valid_to__isnull=True).count()
+
+        # 4 clients evenly split between 2 doctors = 2 each
+        self.assertEqual(doc_a_count, 2)
+        self.assertEqual(doc_b_count, 2)
+
+    def test_centre_admin_coverage_add_and_end(self):
+        today = timezone.localdate()
+        self.client.force_login(self.admin_user)
+
+        # 1. Add coverage
+        add_data = {
+            "action": "add_coverage",
+            "unit_id": self.unit.id,
+            "absent_doctor": self.doc_a.id,
+            "covering_doctor": self.doc_cover.id,
+            "start_date": str(today),
+            "end_date": str(today + datetime.timedelta(days=7)),
+            "reason": "Conference",
+            "is_active": "on",
+        }
+        resp = self.client.post(reverse("clients:centre-admin"), add_data)
+        self.assertEqual(resp.status_code, 302)
+        coverage = DoctorCoverage.objects.filter(absent_doctor=self.doc_a, covering_doctor=self.doc_cover).first()
+        self.assertIsNotNone(coverage)
+        self.assertTrue(coverage.is_active)
+
+        # 2. End coverage
+        end_data = {
+            "action": "end_coverage",
+            "unit_id": self.unit.id,
+            "coverage_id": coverage.id,
+        }
+        resp_end = self.client.post(reverse("clients:centre-admin"), end_data)
+        self.assertEqual(resp_end.status_code, 302)
+        coverage.refresh_from_db()
+        self.assertFalse(coverage.is_active)
+
+

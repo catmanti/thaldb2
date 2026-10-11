@@ -172,6 +172,13 @@ class Client(models.Model):
     @property
     def assigned_doctor(self):
         """Returns the currently active assigned primary doctor for the patient's primary care unit."""
+        if hasattr(self, "active_doctor_assignment_list"):
+            unit = self.primary_care_unit
+            for assign in self.active_doctor_assignment_list:
+                if not unit or assign.care_unit_id == unit.id:
+                    return assign.doctor
+            return None
+
         unit = self.primary_care_unit
         if not unit:
             return None
@@ -345,6 +352,25 @@ class ClientCareAssignment(models.Model):
         """Helper to close an active assignment before assigning a new doctor."""
         self.valid_to = end_date or timezone.localdate()
         self.save(update_fields=["valid_to", "updated_at"])
+
+    @classmethod
+    def assign_doctor(cls, client, care_unit, doctor, assigned_by=None, notes=None, start_date=None):
+        """Safely assigns a doctor to a patient at a care unit, closing any existing active assignment."""
+        start = start_date or timezone.localdate()
+        active_qs = cls.objects.filter(client=client, care_unit=care_unit, valid_to__isnull=True)
+        for old in active_qs:
+            if old.doctor_id == doctor.id:
+                return old
+            old.close_assignment(end_date=start)
+
+        return cls.objects.create(
+            client=client,
+            care_unit=care_unit,
+            doctor=doctor,
+            valid_from=start,
+            assigned_by=assigned_by,
+            notes=notes or "",
+        )
 
     def __str__(self):
         doc_name = self.doctor.get_full_name() or self.doctor.email

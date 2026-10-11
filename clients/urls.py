@@ -4,6 +4,7 @@ from .views import (
     AdmissionCreateView,
     AdmissionUpdateView,
     BMTClientListView,
+    CentreAdminAllocationView,
     ClientCreateView,
     ClientDetailView,
     ClientListView,
@@ -24,6 +25,7 @@ app_name = "clients"
 
 urlpatterns = [
     path("", ClientListView.as_view(), name="client-list"),
+    path("centre-admin/", CentreAdminAllocationView.as_view(), name="centre-admin"),
     path("deceased/", DeceasedClientListView.as_view(), name="client-deceased-list"),
     path("bmt/", BMTClientListView.as_view(), name="client-bmt-list"),
     path("create/", ClientCreateView.as_view(), name="client-create"),

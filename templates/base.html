@@ -49,6 +49,9 @@
                         <li><a href="#" class="font-medium">Admissions</a></li>
                         <li><a href="#" class="font-medium">Transfusions</a></li>
                         <li><a href="#" class="font-medium">Clinic Visits</a></li>
+                        {% if request.user.is_unit_admin %}
+                        <li><a href="{% url 'clients:centre-admin' %}" class="font-medium text-secondary">Centre Admin</a></li>
+                        {% endif %}
                     </ul>
                 </div>
                 {% endif %}
@@ -81,6 +84,9 @@
                     <li><a href="#" class="rounded-lg">Admissions</a></li>
                     <li><a href="#" class="rounded-lg">Transfusions</a></li>
                     <li><a href="#" class="rounded-lg">Clinic Visits</a></li>
+                    {% if request.user.is_unit_admin %}
+                    <li><a href="{% url 'clients:centre-admin' %}" class="rounded-lg text-secondary font-bold">Centre Admin</a></li>
+                    {% endif %}
                 </ul>
             </div>
             {% endif %}

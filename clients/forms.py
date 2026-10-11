@@ -6,6 +6,7 @@ from .models import (
     Choice,
     Client,
     District,
+    DoctorCoverage,
     DS_Division,
     Investigation,
     InvestigationType,
@@ -251,4 +252,47 @@ class InvestigationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.initial.get("date_done") and not self.instance.pk:
             self.initial["date_done"] = timezone.localdate()
+
+
+class DoctorCoverageForm(forms.ModelForm):
+    """Form for Unit Admins to schedule or manage temporary doctor leave coverage."""
+
+    class Meta:
+        model = DoctorCoverage
+        fields = [
+            "absent_doctor",
+            "covering_doctor",
+            "start_date",
+            "end_date",
+            "reason",
+            "is_active",
+        ]
+        widgets = {
+            "absent_doctor": forms.Select(attrs={"class": "select select-bordered select-sm w-full"}),
+            "covering_doctor": forms.Select(attrs={"class": "select select-bordered select-sm w-full"}),
+            "start_date": forms.DateInput(attrs={"class": "input input-bordered input-sm w-full", "type": "date"}),
+            "end_date": forms.DateInput(attrs={"class": "input input-bordered input-sm w-full", "type": "date"}),
+            "reason": forms.TextInput(
+                attrs={"class": "input input-bordered input-sm w-full", "placeholder": "e.g. Annual Leave, Medical Leave, Conference"}
+            ),
+            "is_active": forms.CheckboxInput(attrs={"class": "checkbox checkbox-primary checkbox-sm"}),
+        }
+
+    def __init__(self, *args, care_unit=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        doc_qs = User.objects.filter(role=User.Role.DOCTOR, is_active=True).order_by("first_name", "last_name")
+        if care_unit:
+            doc_qs = doc_qs.filter(primary_unit=care_unit)
+
+        self.fields["absent_doctor"].queryset = doc_qs
+        self.fields["covering_doctor"].queryset = doc_qs
+        if not self.instance.pk:
+            if not self.initial.get("start_date"):
+                self.initial["start_date"] = timezone.localdate()
+            if not self.initial.get("end_date"):
+                self.initial["end_date"] = timezone.localdate()
+
 

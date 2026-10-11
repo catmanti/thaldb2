@@ -8,8 +8,22 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .forms import AdmissionForm, ClientForm, InvestigationForm, TransfusionForm
-from .models import Admission, Client, ClientCareUnit, District, DS_Division, Investigation, Transfusion
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from .forms import AdmissionForm, ClientForm, DoctorCoverageForm, InvestigationForm, TransfusionForm
+from .models import (
+    Admission,
+    Client,
+    ClientCareAssignment,
+    ClientCareUnit,
+    District,
+    DoctorCoverage,
+    DS_Division,
+    Investigation,
+    ThalassemiaUnit,
+    Transfusion,
+)
 
 
 # -------------------------------------------------------------------
@@ -35,14 +49,20 @@ def load_ds_divisions_view(request):
     return HttpResponse("".join(options))
 
 
-from users.permissions import UnitScopedClientPermissionMixin, UnitScopedQuerySetMixin, can_user_edit_entry
+from users.permissions import (
+    ClinicalStaffRequiredMixin,
+    UnitAdminRequiredMixin,
+    UnitScopedClientPermissionMixin,
+    UnitScopedQuerySetMixin,
+    can_user_edit_entry,
+)
 
 
 # -------------------------------------------------------------------
 #                       CLIENT CRUD VIEWS
 # -------------------------------------------------------------------
 class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListView):
-    """Searchable & Filterable Client Directory (Scoped to User's Primary Unit)."""
+    """Searchable & Filterable Client Directory (Scoped to User's Primary Unit and Doctor Caseload)."""
 
     model = Client
     template_name = "clients/client_list.html"
@@ -50,18 +70,64 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
     paginate_by = 15
 
     def get_queryset(self):
+        user = self.request.user
+        today = timezone.localdate()
+
         active_care_units_prefetch = models.Prefetch(
             "care_links",
             queryset=ClientCareUnit.objects.filter(is_active=True, role=ClientCareUnit.Role.PRIMARY).select_related("unit"),
         )
+        active_doctor_prefetch = models.Prefetch(
+            "doctor_assignments",
+            queryset=ClientCareAssignment.objects.filter(valid_to__isnull=True).select_related("doctor"),
+            to_attr="active_doctor_assignment_list",
+        )
+
         queryset = (
             super()
             .get_queryset()
             .filter(care_links__is_active=True)
             .distinct()
             .select_related("diagnosis", "ds_division")
-            .prefetch_related(active_care_units_prefetch)
+            .prefetch_related(active_care_units_prefetch, active_doctor_prefetch)
         )
+
+        # Active cross-coverage check for doctor
+        covered_doctor_ids = []
+        if user.is_authenticated and user.is_doctor:
+            covered_doctor_ids = list(
+                DoctorCoverage.objects.filter(
+                    covering_doctor=user,
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    is_active=True,
+                ).values_list("absent_doctor_id", flat=True)
+            )
+
+        # Doctor Filter logic
+        doctor_filter = self.request.GET.get("doctor")
+        if doctor_filter is None:
+            doctor_filter = "me" if (user.is_authenticated and user.is_doctor) else "all"
+
+        if doctor_filter == "me" and user.is_authenticated:
+            queryset = queryset.filter(doctor_assignments__doctor=user, doctor_assignments__valid_to__isnull=True)
+        elif doctor_filter == "covering" and user.is_authenticated:
+            if covered_doctor_ids:
+                queryset = queryset.filter(
+                    doctor_assignments__doctor_id__in=covered_doctor_ids,
+                    doctor_assignments__valid_to__isnull=True,
+                )
+            else:
+                queryset = queryset.none()
+        elif doctor_filter == "unassigned":
+            active_assigned_ids = ClientCareAssignment.objects.filter(valid_to__isnull=True).values("client_id")
+            queryset = queryset.exclude(id__in=active_assigned_ids)
+        elif doctor_filter and doctor_filter != "all" and doctor_filter.isdigit():
+            queryset = queryset.filter(
+                doctor_assignments__doctor_id=int(doctor_filter),
+                doctor_assignments__valid_to__isnull=True,
+            )
+
         q = self.request.GET.get("q", "").strip()
         diagnosis_id = self.request.GET.get("diagnosis")
         gender = self.request.GET.get("gender")
@@ -87,10 +153,56 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
         context = super().get_context_data(**kwargs)
         from .models import DiagnosisType
 
+        User = get_user_model()
+        user = self.request.user
+        today = timezone.localdate()
+
+        doctor_filter = self.request.GET.get("doctor")
+        if doctor_filter is None:
+            doctor_filter = "me" if (user.is_authenticated and user.is_doctor) else "all"
+
+        # Base active client queryset for badge counters
+        base_unit_qs = Client.objects.filter(care_links__is_active=True)
+        if not (user.is_system_admin or user.is_superuser) and user.primary_unit:
+            base_unit_qs = base_unit_qs.filter(care_links__unit=user.primary_unit).distinct()
+
+        # Doctors at this care unit for filter dropdown
+        if user.primary_unit:
+            unit_doctors = User.objects.filter(role=User.Role.DOCTOR, primary_unit=user.primary_unit, is_active=True).order_by("first_name", "last_name")
+        else:
+            unit_doctors = User.objects.filter(role=User.Role.DOCTOR, is_active=True).order_by("first_name", "last_name")
+
+        covered_doctor_ids = []
+        if user.is_authenticated and user.is_doctor:
+            covered_doctor_ids = list(
+                DoctorCoverage.objects.filter(
+                    covering_doctor=user,
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    is_active=True,
+                ).values_list("absent_doctor_id", flat=True)
+            )
+
         context["query"] = self.request.GET.get("q", "")
         context["selected_diagnosis"] = self.request.GET.get("diagnosis", "")
         context["selected_gender"] = self.request.GET.get("gender", "")
+        context["selected_doctor"] = doctor_filter
         context["diagnoses"] = DiagnosisType.objects.all()
+        context["unit_doctors"] = unit_doctors
+        context["has_covering_duty"] = bool(covered_doctor_ids)
+
+        # Tab badge counts
+        active_assigned_ids = ClientCareAssignment.objects.filter(valid_to__isnull=True).values("client_id")
+        context["all_patients_count"] = base_unit_qs.count()
+        context["unassigned_patients_count"] = base_unit_qs.exclude(id__in=active_assigned_ids).count()
+        if user.is_authenticated and user.is_doctor:
+            context["my_patients_count"] = base_unit_qs.filter(doctor_assignments__doctor=user, doctor_assignments__valid_to__isnull=True).count()
+            context["covering_patients_count"] = (
+                base_unit_qs.filter(doctor_assignments__doctor_id__in=covered_doctor_ids, doctor_assignments__valid_to__isnull=True).count()
+                if covered_doctor_ids
+                else 0
+            )
+
         return context
 
 
@@ -694,4 +806,267 @@ class InvestigationUpdateView(LoginRequiredMixin, UnitScopedQuerySetMixin, Updat
         context["client"] = self.object.client
         context["modal_title"] = f"Edit Investigation - {self.object.client.initials_with_last_name}"
         return context
+
+
+# -------------------------------------------------------------------
+#                 CENTRE ADMIN: DOCTOR CASELOAD & ALLOCATION
+# -------------------------------------------------------------------
+class CentreAdminAllocationView(UnitAdminRequiredMixin, ListView):
+    """
+    Dedicated Centre Administration & Doctor Caseload Management Panel.
+    Enables Unit Admins and System Admins to:
+    - View live doctor workload distributions (total, male, female, pediatric).
+    - Manage temporary leave delegations / cross-coverage.
+    - Perform single & smart multi-doctor batch patient allocations.
+    """
+
+    model = Client
+    template_name = "clients/centre_admin_allocation.html"
+    context_object_name = "clients"
+    paginate_by = 50
+
+    def get_unit(self):
+        user = self.request.user
+        unit_id = self.request.GET.get("unit") or self.request.POST.get("unit_id")
+        if (user.is_system_admin or user.is_superuser) and unit_id:
+            return get_object_or_404(ThalassemiaUnit, pk=unit_id)
+        if user.primary_unit:
+            return user.primary_unit
+        return ThalassemiaUnit.objects.first()
+
+    def get_queryset(self):
+        unit = self.get_unit()
+        if not unit:
+            return Client.objects.none()
+
+        active_assignments_prefetch = models.Prefetch(
+            "doctor_assignments",
+            queryset=ClientCareAssignment.objects.filter(care_unit=unit, valid_to__isnull=True).select_related("doctor"),
+            to_attr="active_doctor_assignment_list",
+        )
+
+        qs = (
+            Client.objects.filter(care_links__unit=unit, care_links__is_active=True)
+            .distinct()
+            .select_related("diagnosis", "ds_division")
+            .prefetch_related(active_assignments_prefetch)
+        )
+
+        status_filter = self.request.GET.get("status", "unassigned")
+        gender_filter = self.request.GET.get("gender")
+        age_group = self.request.GET.get("age_group")
+        doctor_id = self.request.GET.get("doctor")
+        q = self.request.GET.get("q", "").strip()
+
+        active_unit_assigned_ids = ClientCareAssignment.objects.filter(care_unit=unit, valid_to__isnull=True).values("client_id")
+        if status_filter == "unassigned":
+            qs = qs.exclude(id__in=active_unit_assigned_ids)
+        elif status_filter == "assigned":
+            qs = qs.filter(id__in=active_unit_assigned_ids)
+
+        if doctor_id and doctor_id.isdigit():
+            qs = qs.filter(
+                doctor_assignments__care_unit=unit,
+                doctor_assignments__doctor_id=int(doctor_id),
+                doctor_assignments__valid_to__isnull=True,
+            )
+
+        if gender_filter:
+            qs = qs.filter(gender=gender_filter)
+
+        today = timezone.localdate()
+        if age_group == "pediatric":
+            cutoff = today.replace(year=today.year - 12)
+            qs = qs.filter(date_of_birth__gt=cutoff)
+        elif age_group == "adolescent":
+            cutoff_18 = today.replace(year=today.year - 18)
+            cutoff_12 = today.replace(year=today.year - 12)
+            qs = qs.filter(date_of_birth__gte=cutoff_18, date_of_birth__lte=cutoff_12)
+        elif age_group == "adult":
+            cutoff_18 = today.replace(year=today.year - 18)
+            qs = qs.filter(date_of_birth__lt=cutoff_18)
+
+        if q:
+            qs = qs.filter(
+                models.Q(registration_number__icontains=q)
+                | models.Q(full_name__icontains=q)
+                | models.Q(nic_number__icontains=q)
+            )
+
+        return qs.order_by("registration_number")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        unit = self.get_unit()
+        context["care_unit"] = unit
+        context["all_units"] = (
+            ThalassemiaUnit.objects.all() if (self.request.user.is_system_admin or self.request.user.is_superuser) else []
+        )
+
+        if not unit:
+            return context
+
+        User = get_user_model()
+        today = timezone.localdate()
+        cutoff_12 = today.replace(year=today.year - 12)
+
+        doctors = User.objects.filter(role=User.Role.DOCTOR, primary_unit=unit, is_active=True).order_by("first_name", "last_name")
+        doctor_stats = []
+        for doc in doctors:
+            assigned_clients = Client.objects.filter(
+                care_links__unit=unit,
+                care_links__is_active=True,
+                doctor_assignments__care_unit=unit,
+                doctor_assignments__doctor=doc,
+                doctor_assignments__valid_to__isnull=True,
+            ).distinct()
+
+            total_doc = assigned_clients.count()
+            male_doc = assigned_clients.filter(gender="M").count()
+            female_doc = assigned_clients.filter(gender="F").count()
+            ped_doc = assigned_clients.filter(date_of_birth__gt=cutoff_12).count()
+
+            active_coverage = DoctorCoverage.objects.filter(
+                care_unit=unit,
+                absent_doctor=doc,
+                start_date__lte=today,
+                end_date__gte=today,
+                is_active=True,
+            ).first()
+
+            doctor_stats.append({
+                "doctor": doc,
+                "total": total_doc,
+                "male": male_doc,
+                "female": female_doc,
+                "pediatric": ped_doc,
+                "is_on_leave": bool(active_coverage),
+                "active_coverage": active_coverage,
+            })
+
+        total_unit_clients = Client.objects.filter(care_links__unit=unit, care_links__is_active=True).distinct().count()
+        active_unit_assigned_ids = ClientCareAssignment.objects.filter(care_unit=unit, valid_to__isnull=True).values("client_id")
+        unassigned_count = (
+            Client.objects.filter(care_links__unit=unit, care_links__is_active=True)
+            .exclude(id__in=active_unit_assigned_ids)
+            .distinct()
+            .count()
+        )
+
+        coverages = (
+            DoctorCoverage.objects.filter(care_unit=unit)
+            .select_related("absent_doctor", "covering_doctor")
+            .order_by("-start_date", "-id")[:10]
+        )
+
+        context["doctor_stats"] = doctor_stats
+        context["doctors"] = doctors
+        context["total_unit_clients"] = total_unit_clients
+        context["unassigned_count"] = unassigned_count
+        context["coverages"] = coverages
+        context["coverage_form"] = DoctorCoverageForm(care_unit=unit)
+
+        context["selected_status"] = self.request.GET.get("status", "unassigned")
+        context["selected_gender"] = self.request.GET.get("gender", "")
+        context["selected_age_group"] = self.request.GET.get("age_group", "")
+        context["selected_doctor"] = self.request.GET.get("doctor", "")
+        context["query"] = self.request.GET.get("q", "")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        unit = self.get_unit()
+        if not unit:
+            messages.error(request, "Care unit not found.")
+            return redirect("clients:centre-admin")
+
+        action = request.POST.get("action")
+        User = get_user_model()
+
+        if action == "assign_doctor":
+            client_ids = request.POST.getlist("client_ids")
+            doctor_id = request.POST.get("target_doctor_id")
+            if not client_ids:
+                messages.error(request, "Please select at least one patient to assign.")
+                return redirect(request.get_full_path())
+            if not doctor_id:
+                messages.error(request, "Please select a target doctor.")
+                return redirect(request.get_full_path())
+
+            target_doctor = get_object_or_404(User, pk=doctor_id, role=User.Role.DOCTOR)
+            clients_to_assign = Client.objects.filter(id__in=client_ids, care_links__unit=unit)
+
+            assigned_count = 0
+            for client in clients_to_assign:
+                ClientCareAssignment.assign_doctor(
+                    client=client,
+                    care_unit=unit,
+                    doctor=target_doctor,
+                    assigned_by=request.user,
+                    notes=request.POST.get("assignment_notes", "Batch assignment by Centre Admin"),
+                )
+                assigned_count += 1
+
+            messages.success(
+                request,
+                f"Successfully assigned {assigned_count} patient(s) to Dr. {target_doctor.get_full_name() or target_doctor.email}."
+            )
+            return redirect(request.get_full_path())
+
+        elif action == "smart_split":
+            client_ids = request.POST.getlist("client_ids")
+            doctor_ids = request.POST.getlist("split_doctor_ids")
+            if not client_ids:
+                messages.error(request, "Please select at least one patient to distribute.")
+                return redirect(request.get_full_path())
+            if not doctor_ids or len(doctor_ids) < 2:
+                messages.error(request, "Please select at least two doctors to distribute patients evenly between.")
+                return redirect(request.get_full_path())
+
+            selected_doctors = list(User.objects.filter(id__in=doctor_ids, role=User.Role.DOCTOR))
+            clients_to_assign = list(
+                Client.objects.filter(id__in=client_ids, care_links__unit=unit).order_by("registration_number")
+            )
+
+            num_docs = len(selected_doctors)
+            for i, client in enumerate(clients_to_assign):
+                doc = selected_doctors[i % num_docs]
+                ClientCareAssignment.assign_doctor(
+                    client=client,
+                    care_unit=unit,
+                    doctor=doc,
+                    assigned_by=request.user,
+                    notes=f"Evenly distributed across {num_docs} doctors by Centre Admin",
+                )
+
+            messages.success(
+                request,
+                f"Successfully distributed {len(clients_to_assign)} patient(s) evenly across {num_docs} doctors: "
+                + ", ".join([f"Dr. {d.get_full_name() or d.email}" for d in selected_doctors])
+            )
+            return redirect(request.get_full_path())
+
+        elif action == "add_coverage":
+            form = DoctorCoverageForm(request.POST, care_unit=unit)
+            if form.is_valid():
+                cov = form.save(commit=False)
+                cov.care_unit = unit
+                cov.save()
+                messages.success(
+                    request,
+                    f"Leave coverage scheduled: Dr. {cov.covering_doctor} covering for Dr. {cov.absent_doctor}."
+                )
+            else:
+                err_msg = " ".join([f"{f}: {e[0]}" for f, e in form.errors.items()])
+                messages.error(request, f"Could not schedule coverage: {err_msg}")
+            return redirect(request.get_full_path())
+
+        elif action == "end_coverage":
+            cov_id = request.POST.get("coverage_id")
+            cov = get_object_or_404(DoctorCoverage, pk=cov_id, care_unit=unit)
+            cov.is_active = False
+            cov.save(update_fields=["is_active", "updated_at"])
+            messages.success(request, f"Leave coverage for Dr. {cov.absent_doctor} has been deactivated.")
+            return redirect(request.get_full_path())
+
+        return redirect(request.get_full_path())
 
