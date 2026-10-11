@@ -67,7 +67,16 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
     model = Client
     template_name = "clients/client_list.html"
     context_object_name = "clients"
-    paginate_by = 15
+    DEFAULT_PAGE_SIZE = 50
+    ALLOWED_PAGE_SIZES = [25, 50, 100]
+
+    def get_paginate_by(self, queryset):
+        page_size_param = self.request.GET.get("page_size")
+        if page_size_param and page_size_param.isdigit():
+            size = int(page_size_param)
+            if size in self.ALLOWED_PAGE_SIZES:
+                return size
+        return self.DEFAULT_PAGE_SIZE
 
     def get_queryset(self):
         user = self.request.user
@@ -202,6 +211,9 @@ class ClientListView(LoginRequiredMixin, UnitScopedClientPermissionMixin, ListVi
                 if covered_doctor_ids
                 else 0
             )
+
+        context["page_size"] = self.get_paginate_by(self.object_list)
+        context["allowed_page_sizes"] = self.ALLOWED_PAGE_SIZES
 
         return context
 

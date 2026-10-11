@@ -31,39 +31,39 @@
     <!-- Doctor Caseload Quick Filter Tabs -->
     <div class="flex flex-wrap gap-2 border-b border-base-200 pb-2">
         {% if request.user.is_doctor %}
-        <a href="?doctor=me&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=me&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'me' %}btn-primary shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
             <span>👨‍⚕️ My Patients</span>
             <span class="badge {% if selected_doctor == 'me' %}badge-white text-primary font-bold{% else %}badge-ghost{% endif %} badge-xs">{{ my_patients_count }}</span>
         </a>
 
         {% if has_covering_duty %}
-        <a href="?doctor=covering&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=covering&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'covering' %}btn-warning text-warning-content shadow-sm{% else %}btn-ghost text-warning{% endif %} gap-1.5 text-xs">
             <span>🔄 Covering Duty</span>
             <span class="badge badge-warning badge-xs font-bold">{{ covering_patients_count }}</span>
         </a>
         {% endif %}
 
-        <a href="?doctor=all&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=all&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'all' %}btn-neutral shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
             <span>🏥 All Centre Patients</span>
             <span class="badge badge-ghost badge-xs">{{ all_patients_count }}</span>
         </a>
 
-        <a href="?doctor=unassigned&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=unassigned&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'unassigned' %}btn-error text-error-content shadow-sm{% else %}btn-ghost text-error{% endif %} gap-1.5 text-xs">
             <span>⚠️ Unassigned</span>
             <span class="badge {% if selected_doctor == 'unassigned' %}badge-white text-error font-bold{% else %}badge-error badge-outline{% endif %} badge-xs">{{ unassigned_patients_count }}</span>
         </a>
         {% else %}
-        <a href="?doctor=all&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=all&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'all' or not selected_doctor %}btn-primary shadow-sm{% else %}btn-ghost{% endif %} gap-1.5 text-xs">
             <span>🏥 All Centre Patients</span>
             <span class="badge badge-ghost badge-xs">{{ all_patients_count }}</span>
         </a>
 
-        <a href="?doctor=unassigned&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
+        <a href="?doctor=unassigned&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}"
             class="btn btn-sm {% if selected_doctor == 'unassigned' %}btn-error text-error-content shadow-sm{% else %}btn-ghost text-error{% endif %} gap-1.5 text-xs">
             <span>⚠️ Unassigned</span>
             <span class="badge {% if selected_doctor == 'unassigned' %}badge-white text-error font-bold{% else %}badge-error badge-outline{% endif %} badge-xs">{{ unassigned_patients_count }}</span>
@@ -75,6 +75,7 @@
     <div class="card bg-base-100 shadow-md border border-base-300">
         <div class="card-body p-4">
             <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                <input type="hidden" name="page_size" value="{{ page_size }}">
                 <!-- Search Query -->
                 <div class="form-control lg:col-span-2">
                     <label class="label py-1"><span class="label-text text-xs font-bold uppercase">Search Patient</span></label>
@@ -239,22 +240,45 @@
             </table>
         </div>
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-        <div class="p-4 border-t border-base-200 flex justify-center">
-            <div class="join">
-                {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
-                    class="join-item btn btn-sm">«</a>
-                {% endif %}
-                <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
-                    class="join-item btn btn-sm">»</a>
+        <!-- Table Footer: Page Size Selector & Pagination -->
+        <div class="p-4 border-t border-base-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Items Per Page Selector -->
+            <div class="flex items-center gap-2 text-xs text-base-content/70">
+                <span class="font-semibold">Show per page:</span>
+                <div class="join">
+                    {% for size in allowed_page_sizes %}
+                    <a href="?page=1&page_size={{ size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
+                        class="join-item btn btn-xs {% if page_size == size %}btn-primary font-bold{% else %}btn-ghost{% endif %}">
+                        {{ size }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Page Count Info & Nav Buttons -->
+            <div class="flex items-center gap-4">
+                {% if is_paginated %}
+                <span class="text-xs text-base-content/60 hidden md:inline">
+                    Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> patients
+                </span>
+                <div class="join">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
+                        class="join-item btn btn-sm">«</a>
+                    {% endif %}
+                    <button class="join-item btn btn-sm btn-disabled">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&page_size={{ page_size }}&q={{ query }}&diagnosis={{ selected_diagnosis }}&gender={{ selected_gender }}&doctor={{ selected_doctor }}"
+                        class="join-item btn btn-sm">»</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <span class="text-xs text-base-content/60">
+                    Showing all <strong>{{ clients|length }}</strong> patients
+                </span>
                 {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

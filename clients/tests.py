@@ -1057,4 +1057,28 @@ class ClientCareAssignmentTests(TestCase):
         coverage.refresh_from_db()
         self.assertFalse(coverage.is_active)
 
+    def test_client_directory_page_size_and_pagination(self):
+        self.client.force_login(self.admin_user)
+
+        # 1. Default page_size is 50
+        resp_default = self.client.get(reverse("clients:client-list"))
+        self.assertEqual(resp_default.status_code, 200)
+        self.assertEqual(resp_default.context["page_size"], 50)
+        self.assertIn(50, resp_default.context["allowed_page_sizes"])
+
+        # 2. Explicit allowed page_size (e.g. 25, 100)
+        resp_25 = self.client.get(reverse("clients:client-list"), {"page_size": "25"})
+        self.assertEqual(resp_25.status_code, 200)
+        self.assertEqual(resp_25.context["page_size"], 25)
+
+        resp_100 = self.client.get(reverse("clients:client-list"), {"page_size": "100"})
+        self.assertEqual(resp_100.status_code, 200)
+        self.assertEqual(resp_100.context["page_size"], 100)
+
+        # 3. Invalid page_size falls back safely to default 50
+        resp_invalid = self.client.get(reverse("clients:client-list"), {"page_size": "9999"})
+        self.assertEqual(resp_invalid.status_code, 200)
+        self.assertEqual(resp_invalid.context["page_size"], 50)
+
+
 
