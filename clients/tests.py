@@ -1137,6 +1137,34 @@ class ClientCareAssignmentTests(TestCase):
         self.assertEqual(resp_nawarathna.status_code, 200)
         self.assertIn(p_v, list(resp_nawarathna.context["clients"]))
 
+        # 3. Test -ke <-> -ka and -ne <-> -na terminal endings
+        p_rat = Client.objects.create(
+            registration_number="TH-PHONETIC-03",
+            full_name="Kasun Ratnayaka",
+            gender="M",
+            date_of_birth="2005-05-05",
+        )
+        ClientCareUnit.objects.create(client=p_rat, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        p_soma = Client.objects.create(
+            registration_number="TH-PHONETIC-04",
+            full_name="Dinuk Somarathna",
+            gender="M",
+            date_of_birth="2008-08-08",
+        )
+        ClientCareUnit.objects.create(client=p_soma, unit=self.unit, role=ClientCareUnit.Role.PRIMARY, is_active=True)
+
+        # Searching "rathnayake" (ending in -ke) finds "Ratnayaka" (ending in -ka)
+        resp_rathnayake = self.client.get(reverse("clients:client-list"), {"q": "rathnayake", "doctor": "all"})
+        self.assertEqual(resp_rathnayake.status_code, 200)
+        self.assertIn(p_rat, list(resp_rathnayake.context["clients"]))
+
+        # Searching "somarathne" (ending in -ne) finds "Somarathna" (ending in -na)
+        resp_somarathne = self.client.get(reverse("clients:client-list"), {"q": "somarathne", "doctor": "all"})
+        self.assertEqual(resp_somarathne.status_code, 200)
+        self.assertIn(p_soma, list(resp_somarathne.context["clients"]))
+
+
 
 
 

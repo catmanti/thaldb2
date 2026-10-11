@@ -8,6 +8,10 @@ def expand_phonetic_variants(query: str) -> list[str]:
     """
     Expands a search query into common Sri Lankan English transliteration variants.
     Handles Sinhala/Tamil romanization equivalences:
+    - -ke <-> -ka (e.g., Rathnayake / Rathnayaka, Dissanayake / Dissanayaka)
+    - -ne <-> -na (e.g., Somarathne / Somarathna, Nawarathne / Nawarathna)
+    - -se <-> -sa (e.g., Dharmadasa / Dharmadase)
+    - -ena <-> -ana (e.g., Gunawardena / Gunawardana, Jayawardena / Jayawardana)
     - w <-> v  (e.g., Nawa / Nava, Wasantha / Vasantha, Nawanjana / Navanjana)
     - th <-> t (e.g., Nawarathna / Navaratna, Wathsala / Watsala)
     - ee <-> i (e.g., Kumari / Kumaree)
@@ -19,35 +23,56 @@ def expand_phonetic_variants(query: str) -> list[str]:
 
     variants = {raw}
 
-    # 1. Sinhala 'ව' duality: w <-> v
+    # 1. Sinhala final/terminal vowel duality: -ke <-> -ka, -ne <-> -na, -se <-> -sa, -ena <-> -ana
+    for q in list(variants):
+        if len(q) >= 4:
+            if q.endswith("ke"):
+                variants.add(q[:-2] + "ka")
+            elif q.endswith("ka"):
+                variants.add(q[:-2] + "ke")
+            if q.endswith("ne"):
+                variants.add(q[:-2] + "na")
+            elif q.endswith("na"):
+                variants.add(q[:-2] + "ne")
+            if q.endswith("se"):
+                variants.add(q[:-2] + "sa")
+            elif q.endswith("sa"):
+                variants.add(q[:-2] + "se")
+
+        if "ena" in q:
+            variants.add(q.replace("ena", "ana"))
+        if "ana" in q:
+            variants.add(q.replace("ana", "ena"))
+
+    # 2. Sinhala 'ව' duality: w <-> v
     for q in list(variants):
         if "w" in q:
             variants.add(q.replace("w", "v"))
         if "v" in q:
             variants.add(q.replace("v", "w"))
 
-    # 2. Sinhala 'ත' duality: th <-> t
+    # 3. Sinhala 'ත' duality: th <-> t
     for q in list(variants):
         if "th" in q:
             variants.add(q.replace("th", "t"))
         elif "t" in q:
             variants.add(q.replace("t", "th"))
 
-    # 3. ee <-> i
+    # 4. ee <-> i
     for q in list(variants):
         if "ee" in q:
             variants.add(q.replace("ee", "i"))
         elif "i" in q and len(q) > 3:
             variants.add(q.replace("i", "ee"))
 
-    # 4. oo <-> u
+    # 5. oo <-> u
     for q in list(variants):
         if "oo" in q:
             variants.add(q.replace("oo", "u"))
         elif "u" in q and len(q) > 3:
             variants.add(q.replace("u", "oo"))
 
-    return list(variants)[:12]
+    return list(variants)[:16]
 
 
 def build_client_search_query(q: str, extra_fields: list[str] | None = None) -> models.Q:
